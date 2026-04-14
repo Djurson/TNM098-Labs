@@ -33,12 +33,37 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
   const [lo, hi] = isControlled ? controlledValue! : internalValue;
   const isSameRange = (a: [number, number], b: [number, number]) => a[0] === b[0] && a[1] === b[1];
 
+  // Keep refs with latest values for event handlers that outlive a render frame.
+  const internalValueRef = useRef<[number, number]>(internalValue);
+  const controlledValueRef = useRef<[number, number] | undefined>(controlledValue);
+  const lastEmittedRef = useRef<[number, number]>(isControlled && controlledValue ? controlledValue : internalValue);
+
   // Sync controlled value into internal state when it changes externally
   useEffect(() => {
     if (isControlled && controlledValue) {
       setInternalValue((prev) => (isSameRange(prev, controlledValue) ? prev : controlledValue));
     }
   }, [isControlled, controlledValue]);
+
+  useEffect(() => {
+    internalValueRef.current = internalValue;
+  }, [internalValue]);
+
+  useEffect(() => {
+    controlledValueRef.current = controlledValue;
+  }, [controlledValue]);
+
+  useEffect(() => {
+    if (isControlled && controlledValue) {
+      lastEmittedRef.current = controlledValue;
+    }
+  }, [isControlled, controlledValue]);
+
+  useEffect(() => {
+    if (!isControlled) {
+      lastEmittedRef.current = internalValue;
+    }
+  }, [isControlled, internalValue]);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
@@ -70,13 +95,14 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
 
   const update = useCallback(
     (next: [number, number]) => {
-      const current = isControlled ? (controlledValue ?? internalValueRef.current) : internalValueRef.current;
-      if (isSameRange(current, next)) return;
+      if (isSameRange(lastEmittedRef.current, next)) return;
+
+      lastEmittedRef.current = next;
 
       if (!isControlled) setInternalValue(next);
       onChange?.(next);
     },
-    [isControlled, onChange, controlledValue],
+    [isControlled, onChange],
   );
 
   const startDrag = useCallback(
@@ -89,6 +115,8 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
       setDragging(type);
 
       const onMove = (e: MouseEvent) => {
+        if (e.movementX === 0 && e.movementY === 0) return;
+
         const d = dragRef.current!;
         const v = getRawVal(e.clientX);
 
@@ -119,7 +147,7 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
           finalValue = [d.lo!, clamp(v, d.lo! + step, max)];
         } else {
           // For pan, just report the last updated value
-          finalValue = isControlled ? controlledValue! : internalValueRef.current;
+          finalValue = isControlled ? (controlledValueRef.current ?? internalValueRef.current) : internalValueRef.current;
         }
 
         onChangeEnd?.(finalValue);
@@ -132,14 +160,8 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [disabled, getRawVal, min, max, step, snap, update, onChangeEnd, isControlled, controlledValue],
+    [disabled, getRawVal, min, max, step, snap, update, onChangeEnd, isControlled],
   );
-
-  // Keep a ref to internal value so the mouseup closure can read latest value
-  const internalValueRef = useRef<[number, number]>(internalValue);
-  useEffect(() => {
-    internalValueRef.current = internalValue;
-  }, [internalValue]);
 
   const loPct = pct(lo);
   const hiPct = pct(hi);

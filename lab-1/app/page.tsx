@@ -2,6 +2,7 @@
 
 import { HexBinPlot } from "@/components/hexbinplot";
 import { ScatterPlot } from "@/components/scatterplot";
+import { Card, CardContent } from "@/components/ui/card";
 import { LoadData } from "@/lib/load-data";
 
 export default async function Home() {

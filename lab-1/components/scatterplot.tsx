@@ -4,6 +4,7 @@ import { EyeTrackDataPoint } from "@/lib/types";
 import { useEffect, useId, useRef, useState } from "react";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP, SCATTER_POINTS_RADIUS } from "@/lib/utils";
 import { clearSvg, createPositionScales, createSvgRoot, createOpacityScale, drawAxes } from "@/lib/plots/chart-utils";
+import { max } from "d3";
 
 import { Label } from "@/components/ui/label";
 import { RangeSlider } from "./ui/customslider";
@@ -16,8 +17,10 @@ export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
   const baseId = useId().replace(/:/g, "");
   const clipId = `scatter-clip-${baseId}`;
 
+  const maxV = max(data, (d) => d.TimeStamp / 1000) ?? 0;
+
   const [graphSize, setGraphSize] = useState({ width: 0, height: 0 });
-  const [value, setValue] = useState<[number, number]>([0.0, 300.0]);
+  const [value, setValue] = useState<[number, number]>([0.0, maxV]);
 
   useEffect(() => {
     if (!graphSvgRef.current) return;
@@ -87,7 +90,7 @@ export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
       .attr("stroke", "#c2410c")
       .attr("stroke-opacity", 0.5)
       .attr("stroke-width", 0.5);
-  }, [data, graphSize.width, graphSize.height, clipId, value]);
+  }, [data, graphSize.width, graphSize.height, clipId, value[0], value[1]]);
 
   return (
     <div className="h-full flex gap-2 flex-1 flex-col">
@@ -96,7 +99,7 @@ export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
           <Label htmlFor="time-slider">Time (s)</Label>
           <span className="text-sm text-muted-foreground">{value.join(", ")}</span>
         </div>
-        <RangeSlider id="time-slider" value={value} onChange={setValue} min={0} max={300} step={0.25} />
+        <RangeSlider id="time-slider" value={value} onChange={setValue} min={0} max={maxV} step={0.25} />
       </div>
       <svg ref={graphSvgRef} className="w-full h-full flex-1" />
     </div>
