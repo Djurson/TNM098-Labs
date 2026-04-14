@@ -8,11 +8,11 @@ export default async function Home() {
   const data = await LoadData();
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center">
+    <div className="h-full w-full flex flex-col items-center">
       <div className="w-full justify-center flex items-center py-3">
-        <h1>Datavisualization</h1>
+        <h1 className="text-2xl">Datavisualization of eye tracking data</h1>
       </div>
-      <div className="flex justify-center h-full w-full px-8">
+      <div className="flex justify-center flex-1 w-full px-8 gap-6">
         <ScatterPlot data={data ?? []} />
         <HexBinPlot data={data ?? []} />
       </div>

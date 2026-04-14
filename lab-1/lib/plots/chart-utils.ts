@@ -1,4 +1,4 @@
-import { extent, format, interpolateOrRd, max, scaleLinear, scaleSequential, select, sum, type ScaleLinear, type ScaleSequential } from "d3";
+import { extent, format, interpolateOrRd, max, scaleLinear, scaleSequential, select, sum, axisBottom, axisLeft, type ScaleLinear, type ScaleSequential, type Selection } from "d3";
 import type { HexbinBin } from "d3-hexbin";
 import { EyeTrackDataPoint } from "@/lib/types";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP } from "../utils";
@@ -37,7 +37,7 @@ export function createPositionScales(data: EyeTrackDataPoint[], size: ChartSize,
   }
 
   const x = scaleLinear()
-    .domain(xExtent)
+    .domain([xExtent[0], xExtent[1] + 100])
     .nice()
     .rangeRound([margins.left, size.width - margins.right]);
 
@@ -90,4 +90,51 @@ export function calculateContextSvgWidth(colorDomain: [number, number], legend_t
   const contentWidth = Math.max(axisBlockWidth, labelWidth);
 
   return horizontalPadding * 2 + contentWidth;
+}
+
+/**
+ * Creates an opacity scale based on GazeDuration.
+ * Maps the minimum duration to minOpacity and the max duration to maxOpacity.
+ */
+export function createOpacityScale(data: EyeTrackDataPoint[], minOpacity: number = 0.15, maxOpacity: number = 0.85): ScaleLinear<number, number> {
+  const maxDuration = max(data, (d) => d.GazeDuration) || 1;
+  return scaleLinear().domain([0, maxDuration]).range([minOpacity, maxOpacity]);
+}
+
+/**
+ * Reusable function to draw standard X and Y axes.
+ */
+export function drawAxes(root: Selection<SVGSVGElement, unknown, null, undefined>, scales: PositionScales, size: ChartSize, margins: ChartMargins, xLabel: string, yLabel: string) {
+  const { x, y } = scales;
+  const { width, height } = size;
+
+  // X Axis
+  root
+    .append("g")
+    .attr("transform", `translate(0,${height - margins.bottom})`)
+    .call(
+      axisBottom(x)
+        .ticks(Math.max(2, Math.floor(width / 120)), "d")
+        .tickSize(0)
+        .tickPadding(8),
+    )
+    .call((g) => g.select(".domain").attr("stroke", "#111827").attr("stroke-width", 1.2))
+    .call((g) =>
+      g
+        .append("text")
+        .attr("x", width - margins.right)
+        .attr("y", -4)
+        .attr("fill", "currentColor")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "end")
+        .text(xLabel),
+    );
+
+  // Y Axis
+  root
+    .append("g")
+    .attr("transform", `translate(${margins.left},0)`)
+    .call(axisLeft(y).ticks(6, "d").tickSize(0).tickPadding(8))
+    .call((g) => g.select(".domain").attr("stroke", "#111827").attr("stroke-width", 1.2))
+    .call((g) => g.append("text").attr("x", 4).attr("y", margins.top).attr("dy", ".71em").attr("fill", "currentColor").attr("font-weight", "bold").attr("text-anchor", "start").text(yLabel));
 }
