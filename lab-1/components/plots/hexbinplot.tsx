@@ -96,9 +96,20 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   }, [data, graphSize.width, graphSize.height, gradientId, clipId, contextSvgWidth]);
 
   return (
-    <div className="h-full flex gap-1 flex-1">
-      <svg ref={graphSvgRef} className="w-full h-full flex-14" />
-      <svg ref={graphContextSvgRef} className="h-full shrink-0" style={{ width: `${contextSvgWidth}px` }} />
+    <div className="h-full flex gap-2 flex-1 flex-col">
+      <div className="w-full h-full flex-1 flex gap-2">
+        <svg ref={graphSvgRef} className="w-full h-full flex-14" />
+        <svg ref={graphContextSvgRef} className="h-full" style={{ width: `${contextSvgWidth}px` }} />
+      </div>
+      <div className="flex flex-col gap-2 w-full px-8 invisible" aria-hidden="true">
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Time (s)</span>
+          <span className="text-sm">0, 0</span>
+        </div>
+        <div className="relative w-full select-none py-4">
+          <div className="relative h-5" />
+        </div>
+      </div>
     </div>
   );
 }

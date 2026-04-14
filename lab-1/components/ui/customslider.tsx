@@ -167,7 +167,7 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
   const hiPct = pct(hi);
 
   return (
-    <div className={cn("relative w-full select-none py-4", className)} aria-disabled={disabled} id={id}>
+    <div className={cn("relative w-full select-none", className)} aria-disabled={disabled} id={id}>
       {/* Track */}
       <div ref={trackRef} className="relative h-5 flex items-center">
         {/* Background */}
