@@ -23,6 +23,7 @@ export async function LoadData(): Promise<EyeTrackDataPoint[] | undefined> {
         normalizedTsv,
         (row): EyeTrackDataPoint => ({
           TimeStamp: Number(row["RecordingTimestamp"]),
+          FixationIndex: Number(row["FixationIndex"]),
           GazeDuration: Number(row["GazeEventDuration(mS)"]),
           GazePointIndex: Number(row["GazePointIndex"]),
           position: {

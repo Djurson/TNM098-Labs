@@ -2,22 +2,29 @@
 
 import { EyeTrackDataPoint } from "@/lib/types";
 import { useEffect, useId, useRef, useState } from "react";
-import { scaleLinear, extent, select, scaleSequential, interpolateOrRd, max, axisBottom, axisLeft, axisRight } from "d3";
+import { axisBottom, axisLeft, axisRight, format, scaleLinear, sum } from "d3";
 import { hexbin } from "d3-hexbin";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP } from "@/lib/utils";
+import { calculateContextSvgWidth, clearSvg, createDensityColorScale, createPositionScales, createSvgRoot } from "@/lib/plots/chart-utils";
 
-const HEX_RADIUS = 15;
+const HEX_RADIUS = 20;
+
+const GRAPH_X_LEGEND_TEXT = "Gaze X (px)";
+const GRAPH_Y_LEGEND_TEXT = "Gaze Y (px)";
+const GRAPH_CONTEXT_LEGEND_TEXT = "Total Duration (ms)";
 
 export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   const graphSvgRef = useRef<SVGSVGElement | null>(null);
   const graphContextSvgRef = useRef<SVGSVGElement | null>(null);
-  const gradientId = `color-gradient-${useId().replace(/:/g, "")}`;
+  const baseId = useId().replace(/:/g, "");
+  const gradientId = `color-gradient-${baseId}`;
+  const clipId = `hexbin-clip-${baseId}`;
 
   const [graphSize, setGraphSize] = useState({ width: 0, height: 0 });
-  const [graphContextSize, setGraphContextSize] = useState({ width: 0, height: 0 });
+  const [contextSvgWidth, setContextSvgWidth] = useState(160);
 
   useEffect(() => {
-    if (!graphSvgRef.current || !graphContextSvgRef.current) {
+    if (!graphSvgRef.current) {
       return;
     }
 
@@ -28,19 +35,10 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
       });
     });
 
-    const graphContextObserver = new ResizeObserver(([entry]) => {
-      setGraphContextSize({
-        width: entry.contentRect.width,
-        height: entry.contentRect.height,
-      });
-    });
-
     graphObserver.observe(graphSvgRef.current);
-    graphContextObserver.observe(graphContextSvgRef.current);
 
     return () => {
       graphObserver.disconnect();
-      graphContextObserver.disconnect();
     };
   }, []);
 
@@ -52,75 +50,70 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
       return;
     }
 
-    const GRAPH_WIDTH = graphSize.width;
-    const GRAPH_HEIGHT = graphSize.height;
-    const GRAPH_CONTEXT_WIDTH = graphContextSize.width;
-    const GRAPH_CONTEXT_HEIGHT = graphContextSize.height;
+    const graphWidth = graphSize.width;
+    const graphHeight = graphSize.height;
+    const graphContextWidth = contextSvgWidth;
+    const graphContextHeight = graphHeight;
 
-    if (!data || data.length === 0 || !GRAPH_WIDTH || !GRAPH_HEIGHT || !GRAPH_CONTEXT_WIDTH || !GRAPH_CONTEXT_HEIGHT) {
-      select(graphSvg).selectAll("*").remove();
-      select(graphContextSvg).selectAll("*").remove();
+    if (!data || data.length === 0 || !graphWidth || !graphHeight || !graphContextHeight) {
+      clearSvg(graphSvg);
+      clearSvg(graphContextSvg);
       return;
     }
 
-    const xExtent = extent(data, (d) => d.position.x);
-    const yExtent = extent(data, (d) => d.position.y);
-    if (xExtent[0] === undefined || xExtent[1] === undefined || yExtent[0] === undefined || yExtent[1] === undefined) {
-      return;
-    }
+    const scales = createPositionScales(data, { width: graphWidth, height: graphHeight });
+    if (!scales) return;
+    const { x, y } = scales;
 
-    const generator = hexbin<EyeTrackDataPoint>()
-      .x((d) => d.position.x)
-      .y((d) => d.position.y)
+    const hexbinGenerator = hexbin<EyeTrackDataPoint>()
+      .x((d) => x(d.position.x))
+      .y((d) => y(d.position.y))
       .radius(HEX_RADIUS);
-    const bins = generator(data);
-    const maxBinSize = max(bins, (d) => d.length) ?? 1;
-    const colorDomain: [number, number] = [0, Math.max(maxBinSize / 2, 1)];
-    const color = scaleSequential(interpolateOrRd).domain(colorDomain);
+
+    const bins = hexbinGenerator(data);
+
+    const { scale: colorScale, domain: colorDomain } = createDensityColorScale(bins);
+    const nextContextWidth = calculateContextSvgWidth(colorDomain, GRAPH_CONTEXT_LEGEND_TEXT);
+    if (nextContextWidth !== contextSvgWidth) {
+      setContextSvgWidth(nextContextWidth);
+    }
 
     drawHexbinGraph({
       svgElement: graphSvg,
       data,
-      width: GRAPH_WIDTH,
-      height: GRAPH_HEIGHT,
-      color,
+      width: graphWidth,
+      height: graphHeight,
+      color: colorScale,
+      clipId,
     });
 
     drawGraphContext({
       svgElement: graphContextSvg,
-      width: GRAPH_CONTEXT_WIDTH,
-      height: GRAPH_CONTEXT_HEIGHT,
-      color,
+      width: graphContextWidth,
+      height: graphContextHeight,
+      color: colorScale,
       colorDomain,
       gradientId,
     });
-  }, [data, graphSize.width, graphSize.height, graphContextSize.width, graphContextSize.height, gradientId]);
+  }, [data, graphSize.width, graphSize.height, gradientId, clipId, contextSvgWidth]);
 
   return (
-    <div className="h-full w-full flex gap-2">
-      <svg ref={graphSvgRef} className="w-full h-full flex-15" />
-      <svg ref={graphContextSvgRef} className="flex-1 h-full" />
+    <div className="h-full flex gap-1 flex-1">
+      <svg ref={graphSvgRef} className="w-full h-full flex-14" />
+      <svg ref={graphContextSvgRef} className="h-full shrink-0" style={{ width: `${contextSvgWidth}px` }} />
     </div>
   );
 }
 
-function drawHexbinGraph({ svgElement, data, width, height, color }: { svgElement: SVGSVGElement; data: EyeTrackDataPoint[]; width: number; height: number; color: (value: number) => string }) {
-  const xExtent = extent(data, (d) => d.position.x);
-  const yExtent = extent(data, (d) => d.position.y);
+function drawHexbinGraph({ svgElement, data, width, height, color, clipId }: { svgElement: SVGSVGElement; data: EyeTrackDataPoint[]; width: number; height: number; color: (value: number) => string; clipId: string }) {
+  const scales = createPositionScales(data, { width, height });
 
-  if (xExtent[0] === undefined || xExtent[1] === undefined || yExtent[0] === undefined || yExtent[1] === undefined) {
+  if (!scales) {
+    clearSvg(svgElement);
     return;
   }
 
-  const x = scaleLinear()
-    .domain(xExtent)
-    .nice()
-    .rangeRound([GRAPH_MARGIN_LEFT, width - GRAPH_MARGIN_RIGHT]);
-
-  const y = scaleLinear()
-    .domain(yExtent)
-    .nice()
-    .rangeRound([height - GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_TOP]);
+  const { x, y } = scales;
 
   const generator = hexbin<EyeTrackDataPoint>()
     .x((d) => x(d.position.x))
@@ -132,7 +125,7 @@ function drawHexbinGraph({ svgElement, data, width, height, color }: { svgElemen
     ]);
 
   const bins = generator(data);
-  const root = select(svgElement).attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
+  const root = createSvgRoot(svgElement, width, height);
 
   root.selectAll("*").remove();
 
@@ -154,7 +147,7 @@ function drawHexbinGraph({ svgElement, data, width, height, color }: { svgElemen
         .attr("fill", "currentColor")
         .attr("font-weight", "bold")
         .attr("text-anchor", "end")
-        .text("Gaze X (px)"),
+        .text(GRAPH_X_LEGEND_TEXT),
     );
 
   root
@@ -162,11 +155,8 @@ function drawHexbinGraph({ svgElement, data, width, height, color }: { svgElemen
     .attr("transform", `translate(${GRAPH_MARGIN_LEFT},0)`)
     .call(axisLeft(y).ticks(6, "d").tickSize(0).tickPadding(8))
     .call((g) => g.select(".domain").attr("stroke", "#111827").attr("stroke-width", 1.2))
-    .call((g) =>
-      g.append("text").attr("x", 4).attr("y", GRAPH_MARGIN_TOP).attr("dy", ".71em").attr("fill", "currentColor").attr("font-weight", "bold").attr("text-anchor", "start").text("Gaze Y (px)"),
-    );
+    .call((g) => g.append("text").attr("x", 4).attr("y", GRAPH_MARGIN_TOP).attr("dy", ".71em").attr("fill", "currentColor").attr("font-weight", "bold").attr("text-anchor", "start").text(GRAPH_Y_LEGEND_TEXT));
 
-  const clipId = "hexbin-plot-area-clip";
   root
     .append("defs")
     .append("clipPath")
@@ -187,31 +177,17 @@ function drawHexbinGraph({ svgElement, data, width, height, color }: { svgElemen
     .join("path")
     .attr("transform", (bin) => `translate(${bin.x},${bin.y})`)
     .attr("d", generator.hexagon())
-    .attr("fill", (bin) => color(bin.length));
+    .attr("fill", (bin) => color(sum(bin, (d) => d.GazeDuration)));
 }
 
-function drawGraphContext({
-  svgElement,
-  width,
-  height,
-  color,
-  colorDomain,
-  gradientId,
-}: {
-  svgElement: SVGSVGElement;
-  width: number;
-  height: number;
-  color: (value: number) => string;
-  colorDomain: [number, number];
-  gradientId: string;
-}) {
-  const root = select(svgElement).attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
+function drawGraphContext({ svgElement, width, height, color, colorDomain, gradientId }: { svgElement: SVGSVGElement; width: number; height: number; color: (value: number) => string; colorDomain: [number, number]; gradientId: string }) {
+  const root = createSvgRoot(svgElement, width, height);
 
   root.selectAll("*").remove();
 
-  const legendWidth = Math.min(42, Math.max(20, width * 0.22));
+  const legendWidth = 28;
   const legendHeight = Math.max(1, height - GRAPH_MARGIN_TOP - GRAPH_MARGIN_BOTTOM);
-  const legendX = (width - legendWidth) / 2;
+  const legendX = 0;
   const legendY = GRAPH_MARGIN_TOP;
 
   const defs = root.append("defs");
@@ -232,15 +208,7 @@ function drawGraphContext({
     .attr("offset", (d) => d.offset)
     .attr("stop-color", (d) => d.color);
 
-  root
-    .append("rect")
-    .attr("x", legendX)
-    .attr("y", legendY)
-    .attr("width", legendWidth)
-    .attr("height", legendHeight)
-    .attr("stroke", "#111827")
-    .attr("stroke-width", 0.8)
-    .style("fill", `url(#${gradientId})`);
+  root.append("rect").attr("x", legendX).attr("y", legendY).attr("width", legendWidth).attr("height", legendHeight).attr("stroke", "#111827").attr("stroke-width", 0.8).style("fill", `url(#${gradientId})`);
 
   const legendScale = scaleLinear()
     .domain(colorDomain)
@@ -259,6 +227,6 @@ function drawGraphContext({
         .attr("fill", "currentColor")
         .attr("font-weight", "bold")
         .attr("text-anchor", "start")
-        .text("Density"),
+        .text(GRAPH_CONTEXT_LEGEND_TEXT),
     );
 }

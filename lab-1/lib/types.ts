@@ -1,5 +1,6 @@
 export type EyeTrackDataPoint = {
   TimeStamp: number;
+  FixationIndex: number;
   GazeDuration: number;
   GazePointIndex: number;
   position: Vector3;
