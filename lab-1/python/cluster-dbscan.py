@@ -31,10 +31,6 @@ def process_and_bin_data():
             }
         })
 
-    # 4. Bin into 15s intervals
-    bin_size = 15000 
-    df['time_bin'] = (df['RecordingTimestamp'] // bin_size) * bin_size
-
     # 5. Calculate frequency
     freq = df.groupby(['time_bin', 'cluster']).size().unstack(fill_value=0).reset_index()
     freq.columns = [str(col) if col != 'time_bin' else col for col in freq.columns]

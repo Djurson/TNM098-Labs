@@ -25,7 +25,7 @@ function formatToolTipData(d: EyeTrackDataPoint) {
   };
 }
 
-function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
+function fao(data: EyeTrackDataPoint[]): Transition[] {
   if (!data || data.length === 0) return [];
   const result = [];
 
@@ -34,7 +34,6 @@ function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
 
   for (let i = 0; i < data.length; i++) {
     const p = data[i];
-    if (p.cluster === -1) continue;
 
     if (lastConfirmedCluster === null) {
       lastConfirmedCluster = p.cluster;
@@ -47,8 +46,8 @@ function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
         potentialClusterStart = p;
       }
       // Checks so the focus on a new cluster is longer or equal to at least 1s.
-      const duration = p.timeStamp - potentialClusterStart.timeStamp;
-      if (duration >= 1000) {
+      const duration = p.timeStamp - potentialClusterStart.timeStamp + p.gazeDuration;
+      if (duration >= 500) {
         result.push({
           from: lastConfirmedCluster,
           to: p.cluster,
@@ -63,6 +62,48 @@ function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
       potentialClusterStart = p;
     }
   }
+  return result;
+}
+
+function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
+  if (!data || data.length === 0) return [];
+
+  const result: Transition[] = [];
+
+  let lastConfirmedCluster: number = data[0].cluster;
+  let startNode: EyeTrackDataPoint = data[0];
+  let duration: number = data[0].gazeDuration;
+
+  for (let i = 1; i < data.length; i++) {
+    const point = data[i];
+
+    if (point.cluster !== lastConfirmedCluster) {
+      if (duration >= 1000) {
+        result.push({
+          from: lastConfirmedCluster,
+          to: point.cluster,
+          timestamp: startNode.timeStamp,
+          fixationIndex: startNode.fixationIndex,
+          stayDuration: duration,
+        });
+        lastConfirmedCluster = point.cluster;
+        startNode = point;
+      }
+    } else {
+      duration += point.gazeDuration;
+    }
+  }
+  return result;
+}
+
+function foo2(data: EyeTrackDataPoint[]): Transition[] {
+  if (!data || data.length === 0) return [];
+
+  const result: Transition[] = [];
+
+  let currentClusterIndex: number = data[0].cluster;
+  let tempCluster: number | null = null;
+
   return result;
 }
 
