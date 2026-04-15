@@ -7,7 +7,7 @@ import { EyeTrackDataPoint } from "./types";
 import { tryCatch } from "./trycatch";
 
 export async function LoadData(): Promise<EyeTrackDataPoint[] | undefined> {
-  const filePath = path.join(process.cwd(), "public", "data", "EyeTrack-raw.tsv");
+  const filePath = path.join(process.cwd(), "public", "data", "EyeTrack-clustered.tsv");
   const { data: rawTsv, error: readError } = await tryCatch(readFile(filePath, "utf8"));
 
   if (readError || !rawTsv) {
@@ -26,6 +26,7 @@ export async function LoadData(): Promise<EyeTrackDataPoint[] | undefined> {
           FixationIndex: Number(row["FixationIndex"]),
           GazeDuration: Number(row["GazeEventDuration(mS)"]),
           GazePointIndex: Number(row["GazePointIndex"]),
+          ClusterLabel: Number(row["ClusterLabel"]),
           position: {
             x: Number(row["GazePointX(px)"]),
             y: Number(row["GazePointY(px)"]),

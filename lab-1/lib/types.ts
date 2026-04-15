@@ -3,6 +3,7 @@ export type EyeTrackDataPoint = {
   FixationIndex: number;
   GazeDuration: number;
   GazePointIndex: number;
+  ClusterLabel: number;
   position: Vector3;
 };
 
