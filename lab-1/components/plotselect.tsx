@@ -4,6 +4,7 @@ import { CirclePile, Hexagon, ScatterChart } from "lucide-react";
 import { ScatterPlot } from "./plots/scatterplot";
 import { HexBinPlot } from "./plots/hexbinplot";
 import { ClustersPlot } from "./plots/clustersplot";
+import { Test } from "./plots/test";
 
 export function PlotSelect({ data }: { data: EyeTrackDataPoint[] }) {
   return (
@@ -21,6 +22,10 @@ export function PlotSelect({ data }: { data: EyeTrackDataPoint[] }) {
           <CirclePile className="size-4 aspect-square" />
           Dominant Clusters Over Time
         </TabsTrigger>
+        <TabsTrigger value="test" className="text-base flex gap-2 px-3">
+          <CirclePile className="size-4 aspect-square" />
+          Test
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="scatterplot" className="w-full">
         <ScatterPlot data={data} />
@@ -30,6 +35,9 @@ export function PlotSelect({ data }: { data: EyeTrackDataPoint[] }) {
       </TabsContent>
       <TabsContent value="clusters" className="w-full flex items-center">
         <ClustersPlot data={data} />
+      </TabsContent>
+      <TabsContent value="test" className="w-full flex items-center">
+        <Test />
       </TabsContent>
     </Tabs>
   );

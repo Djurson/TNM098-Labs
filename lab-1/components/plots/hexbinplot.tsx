@@ -2,10 +2,12 @@
 
 import { EyeTrackDataPoint } from "@/lib/types";
 import { useEffect, useId, useRef, useState } from "react";
-import { axisBottom, axisLeft, axisRight, format, scaleLinear, sum } from "d3";
-import { hexbin } from "d3-hexbin";
+import { axisRight, scaleLinear, select, sum } from "d3";
+import { hexbin, HexbinBin } from "d3-hexbin";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP, HEX_RADIUS } from "@/lib/utils";
-import { calculateContextSvgWidth, clearSvg, createDensityColorScale, createPositionScales, createSvgRoot, drawAxes } from "@/lib/plots/chart-utils";
+import { applyChartInteractions, calculateContextSvgWidth, clearSvg, createClipPath, createCrosshair, createDensityColorScale, createPositionScales, createSvgRoot, drawAxes, initializeBasePlot } from "@/lib/plots/chart-utils";
+import { useResizeObserver } from "@/hooks/use-resize-observer";
+import { ChartTooltip, TooltipRef } from "../chart-tooltip";
 
 const GRAPH_X_LEGEND_TEXT = "Gaze X (px)";
 const GRAPH_Y_LEGEND_TEXT = "Gaze Y (px)";
@@ -14,31 +16,14 @@ const GRAPH_CONTEXT_LEGEND_TEXT = "Total Duration (ms)";
 export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   const graphSvgRef = useRef<SVGSVGElement | null>(null);
   const graphContextSvgRef = useRef<SVGSVGElement | null>(null);
+  const tooltipRef = useRef<TooltipRef | null>(null);
+
   const baseId = useId().replace(/:/g, "");
   const gradientId = `color-gradient-${baseId}`;
   const clipId = `hexbin-clip-${baseId}`;
 
-  const [graphSize, setGraphSize] = useState({ width: 0, height: 0 });
+  const graphSize = useResizeObserver(graphSvgRef);
   const [contextSvgWidth, setContextSvgWidth] = useState(160);
-
-  useEffect(() => {
-    if (!graphSvgRef.current) {
-      return;
-    }
-
-    const graphObserver = new ResizeObserver(([entry]) => {
-      setGraphSize({
-        width: entry.contentRect.width,
-        height: entry.contentRect.height,
-      });
-    });
-
-    graphObserver.observe(graphSvgRef.current);
-
-    return () => {
-      graphObserver.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     const graphSvg = graphSvgRef.current;
@@ -83,6 +68,7 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
       height: graphHeight,
       color: colorScale,
       clipId,
+      tooltip: tooltipRef.current,
     });
 
     drawGraphContext({
@@ -96,17 +82,18 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   }, [data, graphSize.width, graphSize.height, gradientId, clipId, contextSvgWidth]);
 
   return (
-    <div className="h-full flex gap-2 flex-1 flex-col">
-      <div className="w-full h-full flex-1 flex gap-2">
+    <div className="flex flex-col flex-1 h-full gap-2">
+      <div className="flex flex-1 w-full h-full gap-2">
         <svg ref={graphSvgRef} className="w-full h-full flex-14" />
         <svg ref={graphContextSvgRef} className="h-full" style={{ width: `${contextSvgWidth}px` }} />
+        <ChartTooltip ref={tooltipRef} />
       </div>
-      <div className="flex flex-col gap-2 w-full px-8 invisible" aria-hidden="true">
+      <div className="flex flex-col invisible w-full gap-2 px-8" aria-hidden="true">
         <div className="flex items-center gap-2">
           <span className="text-sm">Time (s)</span>
           <span className="text-sm">0, 0</span>
         </div>
-        <div className="relative w-full select-none py-4">
+        <div className="relative w-full py-4 select-none">
           <div className="relative h-5" />
         </div>
       </div>
@@ -114,19 +101,40 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   );
 }
 
-function drawHexbinGraph({ svgElement, data, width, height, color, clipId }: { svgElement: SVGSVGElement; data: EyeTrackDataPoint[]; width: number; height: number; color: (value: number) => string; clipId: string }) {
-  const scales = createPositionScales(data, { width, height });
+function drawHexbinGraph({
+  svgElement,
+  data,
+  width,
+  height,
+  color,
+  clipId,
+  tooltip,
+}: {
+  svgElement: SVGSVGElement;
+  data: EyeTrackDataPoint[];
+  width: number;
+  height: number;
+  color: (value: number) => string;
+  clipId: string;
+  tooltip: TooltipRef | null;
+}) {
+  const basePlot = initializeBasePlot({
+    svgElement,
+    data,
+    width,
+    height,
+    xAxisLabel: GRAPH_X_LEGEND_TEXT,
+    yAxisLabel: GRAPH_Y_LEGEND_TEXT,
+    clipId,
+  });
 
-  if (!scales) {
-    clearSvg(svgElement);
-    return;
-  }
+  if (!basePlot) return;
 
-  const { x, y } = scales;
+  const { root, scales, crosshair } = basePlot;
 
   const generator = hexbin<EyeTrackDataPoint>()
-    .x((d) => x(d.position.x))
-    .y((d) => y(d.position.y))
+    .x((d) => scales.x(d.position.x))
+    .y((d) => scales.y(d.position.y))
     .radius(HEX_RADIUS)
     .extent([
       [GRAPH_MARGIN_LEFT + HEX_RADIUS, GRAPH_MARGIN_TOP + HEX_RADIUS],
@@ -134,21 +142,6 @@ function drawHexbinGraph({ svgElement, data, width, height, color, clipId }: { s
     ]);
 
   const bins = generator(data);
-  const root = createSvgRoot(svgElement, width, height);
-
-  root.selectAll("*").remove();
-
-  drawAxes(root, scales, { width, height }, { top: GRAPH_MARGIN_TOP, bottom: GRAPH_MARGIN_BOTTOM, left: GRAPH_MARGIN_LEFT, right: GRAPH_MARGIN_RIGHT }, GRAPH_X_LEGEND_TEXT, GRAPH_Y_LEGEND_TEXT);
-
-  root
-    .append("defs")
-    .append("clipPath")
-    .attr("id", clipId)
-    .append("rect")
-    .attr("x", GRAPH_MARGIN_LEFT)
-    .attr("y", GRAPH_MARGIN_TOP)
-    .attr("width", width - GRAPH_MARGIN_LEFT - GRAPH_MARGIN_RIGHT)
-    .attr("height", height - GRAPH_MARGIN_TOP - GRAPH_MARGIN_BOTTOM);
 
   root
     .append("g")
@@ -160,7 +153,15 @@ function drawHexbinGraph({ svgElement, data, width, height, color, clipId }: { s
     .join("path")
     .attr("transform", (bin) => `translate(${bin.x},${bin.y})`)
     .attr("d", generator.hexagon())
-    .attr("fill", (bin) => color(sum(bin, (d) => d.GazeDuration)));
+    .attr("fill", (bin) => color(sum(bin, (d) => d.GazeDuration)))
+    .call((selection) =>
+      applyChartInteractions(selection, crosshair, tooltip, {
+        getCrosshairPos: (bin) => ({ x: bin.x, y: bin.y }),
+        getTooltipData: (bin) => formatToolTipData(bin),
+        onHoverIn: (element) => select(element).transition().duration(100).attr("stroke-width", 2).attr("stroke", "#000"),
+        onHoverOut: (element) => select(element).transition().duration(250).attr("stroke-width", 0.5).attr("stroke", "#111827"),
+      }),
+    );
 }
 
 function drawGraphContext({ svgElement, width, height, color, colorDomain, gradientId }: { svgElement: SVGSVGElement; width: number; height: number; color: (value: number) => string; colorDomain: [number, number]; gradientId: string }) {
@@ -212,4 +213,14 @@ function drawGraphContext({ svgElement, width, height, color, colorDomain, gradi
         .attr("text-anchor", "start")
         .text(GRAPH_CONTEXT_LEGEND_TEXT),
     );
+}
+
+function formatToolTipData(bin: HexbinBin<EyeTrackDataPoint>) {
+  return {
+    title: "Hexagon Bin",
+    details: [
+      { label: "Points inside", value: bin.length },
+      { label: "Total Duration", value: `${sum(bin, (d) => d.GazeDuration)} ms` },
+    ],
+  };
 }
