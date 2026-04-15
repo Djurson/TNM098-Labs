@@ -153,7 +153,7 @@ function drawHexbinGraph({
     .join("path")
     .attr("transform", (bin) => `translate(${bin.x},${bin.y})`)
     .attr("d", generator.hexagon())
-    .attr("fill", (bin) => color(sum(bin, (d) => d.GazeDuration)))
+    .attr("fill", (bin) => color(sum(bin, (d) => d.gazeDuration)))
     .call((selection) =>
       applyChartInteractions(selection, crosshair, tooltip, {
         getCrosshairPos: (bin) => ({ x: bin.x, y: bin.y }),
@@ -220,7 +220,7 @@ function formatToolTipData(bin: HexbinBin<EyeTrackDataPoint>) {
     title: "Hexagon Bin",
     details: [
       { label: "Points inside", value: bin.length },
-      { label: "Total Duration", value: `${sum(bin, (d) => d.GazeDuration)} ms` },
+      { label: "Total Duration", value: `${sum(bin, (d) => d.gazeDuration)} ms` },
     ],
   };
 }

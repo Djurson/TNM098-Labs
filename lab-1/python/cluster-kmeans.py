@@ -7,7 +7,8 @@ def process_and_bin_data():
     df = pd.read_csv('EyeTrack-raw.tsv', sep='\t')
     
     # 1. Clustering with your 6 manual seeds
-    manual_centers = np.array([            [415, 785],
+    manual_centers = np.array([            
+        [415, 785],
         [1249, 786],
         [1428, 785],
         [286, 233],
@@ -25,7 +26,7 @@ def process_and_bin_data():
 
     result = {
         "centers": kmeans.cluster_centers_.tolist(),
-        "points": df[['GazePointX(px)', 'GazePointY(px)', 'RecordingTimestamp', 'cluster']].to_dict(orient='records'),
+        "points": df[['GazePointX(px)', 'GazePointY(px)', 'RecordingTimestamp', 'FixationIndex', 'GazeEventDuration(mS)', 'cluster']].to_dict(orient='records'),
         "frequency": freq.to_dict(orient='records'),
         "maxTime": int(df['RecordingTimestamp'].max())
     }

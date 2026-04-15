@@ -32,16 +32,21 @@ export function Test() {
       });
 
     const observer = new ResizeObserver((entries) => {
-      if (entries[0]) setDimensions({ width: entries[0].contentRect.width, height: entries[0].contentRect.height });
+      if (entries[0] && entries[0].contentRect.width > 0) {
+        setDimensions({
+          width: entries[0].contentRect.width,
+          height: entries[0].contentRect.height,
+        });
+      }
     });
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // SLOWER ANIMATION: Reduced increment to 500ms per 60ms tick
   useEffect(() => {
     let interval: any;
     if (isPlaying && currentTime < maxTime) {
+      // Speed: 500ms jump every 60ms for a steady, observable flow
       interval = setInterval(() => setCurrentTime((prev) => Math.min(prev + 500, maxTime)), 60);
     } else {
       setIsPlaying(false);
@@ -49,8 +54,8 @@ export function Test() {
     return () => clearInterval(interval);
   }, [isPlaying, currentTime, maxTime]);
 
-  // Updated for 15s (15000ms) logic
   const getDominantCluster = (time: number) => {
+    // Looks at the 15s bin associated with the current playback time
     const currentBin = freqData.find((b) => time >= b.time_bin && time < b.time_bin + 15000);
     if (!currentBin) return null;
 
@@ -68,71 +73,42 @@ export function Test() {
   const dominantCluster = getDominantCluster(currentTime);
 
   useEffect(() => {
-    if (!svgRef.current || dimensions.width === 0 || allPoints.length === 0) return;
+    if (!svgRef.current || dimensions.width <= 0 || dimensions.height <= 0 || allPoints.length === 0) return;
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
     const xS = d3
       .scaleLinear()
       .domain([0, 1600])
-      .range([50, dimensions.width - 50]);
+      .range([60, dimensions.width - 60]);
     const yS = d3
       .scaleLinear()
       .domain([0, 1000])
-      .range([dimensions.height - 50, 50]);
+      .range([dimensions.height - 60, 60]);
 
-    // Draw all points with "Attention Highlighting"
     svg
       .selectAll("circle")
       .data(allPoints)
       .join("circle")
       .attr("cx", (d) => xS(d.position.x))
       .attr("cy", (d) => yS(d.position.y))
-      .attr("r", 4.5)
-      .attr("fill", (d) => GetClusterColor(d.ClusterLabel))
-      // Highlight: High opacity for distractions (outliers), low for dominant ROI
-      .attr("fill-opacity", (d) => (d.ClusterLabel === dominantCluster ? 0.1 : 0.9))
-      .attr("stroke", (d) => (d.ClusterLabel === dominantCluster ? "none" : "#fff"))
-      .attr("stroke-width", 0.5);
+      .attr("r", 5)
+      .attr("fill", (d) => GetClusterColor(d.cluster))
+      .attr("fill-opacity", (d) => (d.cluster === dominantCluster ? 0.9 : 0.1))
+      .attr("stroke", (d) => (d.cluster === dominantCluster ? "none" : "#fff"))
+      .attr("stroke-width", 0.7);
   }, [allPoints, currentTime, dimensions, dominantCluster]);
 
   return (
-    <div className="flex flex-col h-dvh w-full bg-[#0f172a] text-slate-200 overflow-hidden p-6 gap-6">
-      <header className="flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Temporal ROI Dominance</h1>
-          <p className="flex items-center gap-2 text-sm text-slate-400">
-            Active Attention:
-            <span className="font-bold" style={{ color: GetClusterColor(dominantCluster ?? -1) }}>
-              {dominantCluster !== null ? `Region ${dominantCluster}` : "Scanning..."}
-            </span>
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setIsPlaying(!isPlaying)} className="px-8 py-2 font-bold text-white transition-all bg-indigo-600 rounded-lg shadow-lg hover:bg-indigo-500 shadow-indigo-500/20">
-            {isPlaying ? "Pause" : "Start Analysis"}
-          </button>
-          <button
-            onClick={() => {
-              setIsPlaying(false);
-              setCurrentTime(allPoints[0]?.TimeStamp || 0);
-            }}
-            className="px-6 py-2 font-bold border rounded-lg bg-slate-800 hover:bg-slate-700 border-slate-700">
-            Restart
-          </button>
-        </div>
-      </header>
-
-      <div ref={containerRef} className="relative flex-1 overflow-hidden border bg-slate-900/50 border-slate-800 rounded-3xl">
-        <svg ref={svgRef} className="w-full h-full" />
-      </div>
-
-      <div className="flex flex-col h-32 gap-3 p-5 mb-2 border shrink-0 bg-slate-900/80 border-slate-800 rounded-3xl">
+    <div className="flex flex-col h-dvh w-full bg-[#020617] text-slate-200 overflow-hidden p-6 gap-6">
+      {/* 1. Timeline at the top (15s bins) */}
+      <div className="flex flex-col gap-3 p-5 border shadow-2xl h-28 shrink-0 bg-slate-900/90 border-slate-800 rounded-3xl">
         <div className="flex justify-between text-[10px] uppercase tracking-widest text-slate-500 font-black">
-          <span>15s Time-Bin Sequence</span>
-          <span className="text-indigo-400">Current Phase: {Math.round(currentTime / 1000)}s</span>
+          <span>Temporal Focus Flow (15s Bins)</span>
+          <span className="font-mono text-indigo-400">{(currentTime / 1000).toFixed(1)}s</span>
         </div>
-        <div className="flex-1 flex items-center gap-0.75 overflow-hidden">
+        <div className="flex-1 flex items-center gap-1.5 overflow-hidden">
           {freqData.map((bin, i) => {
             let maxVal = -1;
             let binDom = -1;
@@ -148,13 +124,44 @@ export function Test() {
                 key={i}
                 style={{
                   backgroundColor: GetClusterColor(binDom),
-                  opacity: bin.time_bin <= currentTime ? 1 : 0.15,
+                  opacity: bin.time_bin <= currentTime ? 1 : 0.1,
                 }}
-                className={`h-full flex-1 rounded-sm transition-all duration-700 ${bin.time_bin <= currentTime ? "scale-y-100" : "scale-y-40"}`}
+                className={`h-full flex-1 rounded-md transition-all duration-700 ${bin.time_bin <= currentTime ? "scale-y-100" : "scale-y-40"}`}
               />
             );
           })}
         </div>
+      </div>
+
+      {/* 2. Controls and Header */}
+      <header className="flex items-center justify-between px-2 shrink-0">
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold tracking-tight text-white">Spatio-Temporal Outlier Analysis</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+            <p className="text-sm font-medium text-slate-400">
+              Dimming Dominant Area: <span style={{ color: GetClusterColor(dominantCluster ?? -1) }}>{dominantCluster !== null ? `Region ${dominantCluster}` : "Initializing..."}</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => setIsPlaying(!isPlaying)} className="px-10 py-2.5 font-bold text-white bg-indigo-600 rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/30 active:scale-95">
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+          <button
+            onClick={() => {
+              setIsPlaying(false);
+              setCurrentTime(allPoints[0]?.timeStamp || 0);
+            }}
+            className="px-6 py-2.5 font-bold bg-slate-800 rounded-2xl border border-slate-700 hover:bg-slate-700 transition-all active:scale-95">
+            Restart
+          </button>
+        </div>
+      </header>
+
+      {/* 3. Main Plot: flex-1 takes up all remaining space */}
+      <div ref={containerRef} className="flex-1 min-h-0 relative border bg-slate-900/30 border-slate-800 rounded-[2.5rem] overflow-hidden shadow-inner">
+        <svg ref={svgRef} className="w-full h-full" />
       </div>
     </div>
   );

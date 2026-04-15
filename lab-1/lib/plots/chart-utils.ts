@@ -53,7 +53,7 @@ export function createDensityColorScale(bins: HexbinBin<EyeTrackDataPoint>[]): {
   scale: ScaleSequential<string, never>;
   domain: [number, number];
 } {
-  const maxDuration = max(bins, (bin) => sum(bin, (d) => d.GazeDuration)) || 1;
+  const maxDuration = max(bins, (bin) => sum(bin, (d) => d.gazeDuration)) || 1;
   const domain: [number, number] = [0, maxDuration];
   const scale = scaleSequential(interpolateOrRd).domain(domain);
 
@@ -97,7 +97,7 @@ export function calculateContextSvgWidth(colorDomain: [number, number], legend_t
  * Maps the minimum duration to minOpacity and the max duration to maxOpacity.
  */
 export function createOpacityScale(data: EyeTrackDataPoint[], minOpacity: number = 0.15, maxOpacity: number = 0.85): ScaleLinear<number, number> {
-  const maxDuration = max(data, (d) => d.GazeDuration) || 1;
+  const maxDuration = max(data, (d) => d.gazeDuration) || 1;
   return scaleLinear().domain([0, maxDuration]).range([minOpacity, maxOpacity]);
 }
 

@@ -1,9 +1,9 @@
 export type EyeTrackDataPoint = {
-  TimeStamp: number;
-  FixationIndex: number;
-  GazeDuration: number;
-  GazePointIndex: number;
-  ClusterLabel: number;
+  timeStamp: number;
+  fixationIndex: number;
+  gazeDuration: number;
+  gazePointIndex: number;
+  cluster: number;
   position: Vector2;
 };
 
@@ -15,4 +15,30 @@ export type Vector2 = {
 export type TooltipData = {
   title: string;
   details: { label: string; value: string | number }[];
+};
+
+export type FullData = {
+  points: EyeTrackDataPoint[];
+  centers: Vector2[];
+  maxTime: number;
+  frequency: TimeLineBin[];
+};
+
+export type TimeLineBin = {
+  time_bin: number;
+  "-1": number;
+  "0": number;
+  "1": number;
+  "2": number;
+  "3": number;
+  "4": number;
+  "5": number;
+  "6": number;
+  "7": number;
+  "8": number;
+  "9": number;
+  "10": number;
+  "11": number;
+  "12": number;
+  "13": number;
 };

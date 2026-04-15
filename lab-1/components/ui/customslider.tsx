@@ -169,9 +169,9 @@ export function RangeSlider({ min = 0, max = 100, step = 1, value: controlledVal
   return (
     <div className={cn("relative w-full select-none", className)} aria-disabled={disabled} id={id}>
       {/* Track */}
-      <div ref={trackRef} className="relative h-5 flex items-center">
+      <div ref={trackRef} className="relative flex items-center h-5">
         {/* Background */}
-        <div className={cn("absolute inset-x-0 h-1 rounded-full bg-secondary", disabled && "opacity-50")} />
+        <div className={cn("absolute inset-x-0 h-1 rounded-full bg-primary/20", disabled && "opacity-50")} />
 
         {/* Filled range — drag to pan */}
         <div

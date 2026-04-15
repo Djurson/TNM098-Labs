@@ -1,42 +1,42 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EyeTrackDataPoint } from "@/lib/types";
+import { FullData } from "@/lib/types";
 import { CirclePile, Hexagon, ScatterChart } from "lucide-react";
 import { ScatterPlot } from "./plots/scatterplot";
 import { HexBinPlot } from "./plots/hexbinplot";
-import { ClustersPlot } from "./plots/clustersplot";
 import { Test } from "./plots/test";
+import { ClusterPlot } from "./plots/clusterplot";
 
-export function PlotSelect({ data }: { data: EyeTrackDataPoint[] }) {
+export function PlotSelect({ data }: { data: FullData }) {
   return (
-    <Tabs defaultValue="scatterplot" className="w-full justify-center flex items-center">
+    <Tabs defaultValue="scatterplot" className="flex items-center justify-center w-full">
       <TabsList variant="default" className="flex gap-4 px-1">
-        <TabsTrigger value="scatterplot" className="text-base flex gap-2 px-3">
+        <TabsTrigger value="scatterplot" className="flex gap-2 px-3 text-base">
           <ScatterChart className="size-4 aspect-square" />
           Scatterplot
         </TabsTrigger>
-        <TabsTrigger value="heatmap" className="text-base flex gap-2 px-3">
+        <TabsTrigger value="heatmap" className="flex gap-2 px-3 text-base">
           <Hexagon className="size-4 aspect-square" />
           Heatmap
         </TabsTrigger>
-        <TabsTrigger value="clusters" className="text-base flex gap-2 px-3">
+        <TabsTrigger value="clusters" className="flex gap-2 px-3 text-base">
           <CirclePile className="size-4 aspect-square" />
           Dominant Clusters Over Time
         </TabsTrigger>
-        <TabsTrigger value="test" className="text-base flex gap-2 px-3">
+        <TabsTrigger value="test" className="flex gap-2 px-3 text-base">
           <CirclePile className="size-4 aspect-square" />
           Test
         </TabsTrigger>
       </TabsList>
       <TabsContent value="scatterplot" className="w-full">
-        <ScatterPlot data={data} />
+        <ScatterPlot data={data.points} />
       </TabsContent>
-      <TabsContent value="heatmap" className="w-full flex items-center">
-        <HexBinPlot data={data} />
+      <TabsContent value="heatmap" className="flex items-center w-full">
+        <HexBinPlot data={data.points} />
       </TabsContent>
-      <TabsContent value="clusters" className="w-full flex items-center">
-        <ClustersPlot data={data} />
+      <TabsContent value="clusters" className="flex items-center w-full">
+        <ClusterPlot data={data.points} />
       </TabsContent>
-      <TabsContent value="test" className="w-full flex items-center">
+      <TabsContent value="test" className="flex items-center w-full">
         <Test />
       </TabsContent>
     </Tabs>
