@@ -8,7 +8,7 @@ export default async function Home() {
   const fulldata = fullData as FullData;
 
   return (
-    <div className="flex flex-col items-center w-full h-full max-h-screen overflow-hidden">
+    <div className="flex flex-col items-center w-full h-full">
       <div className="flex items-center justify-center w-full py-3">
         <h1 className="text-3xl font-extrabold">Datavisualization Of Eye Tracking Data</h1>
       </div>

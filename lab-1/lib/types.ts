@@ -19,7 +19,7 @@ export type TooltipData = {
 
 export type FullData = {
   points: EyeTrackDataPoint[];
-  centers: Vector2[];
+  clusters: ClusterInfo[];
   maxTime: number;
   frequency: TimeLineBin[];
 };
@@ -41,4 +41,9 @@ export type TimeLineBin = {
   "11": number;
   "12": number;
   "13": number;
+};
+
+export type ClusterInfo = {
+  label: number;
+  center: Vector2;
 };

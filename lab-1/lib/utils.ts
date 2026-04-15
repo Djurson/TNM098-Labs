@@ -6,7 +6,7 @@ export const GRAPH_MARGIN_RIGHT = 40;
 export const GRAPH_MARGIN_BOTTOM = 50;
 export const GRAPH_MARGIN_LEFT = 35;
 
-export const HEX_RADIUS = 25;
+export const HEX_RADIUS = 20;
 export const SCATTER_POINTS_RADIUS = 15;
 
 export function cn(...inputs: ClassValue[]) {

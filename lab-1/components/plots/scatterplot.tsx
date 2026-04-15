@@ -33,7 +33,7 @@ function fmtS(s: number) {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
-export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
+export function ScatterPlot({ data, maxTime }: { data: EyeTrackDataPoint[]; maxTime: number }) {
   const graphSvgRef = useRef<SVGSVGElement | null>(null);
   const tooltipRef = useRef<TooltipRef | null>(null);
 
@@ -42,7 +42,7 @@ export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
 
   const graphSize = useResizeObserver(graphSvgRef);
 
-  const [value, setValue] = useState<[number, number]>([0.0, 281]);
+  const [value, setValue] = useState<[number, number]>([0.0, maxTime / 1000]);
   const deferredValue = useDeferredValue(value);
 
   const filteredData = useMemo(() => {
@@ -88,17 +88,21 @@ export function ScatterPlot({ data }: { data: EyeTrackDataPoint[] }) {
 
   return (
     <div className="flex flex-col flex-1 h-full">
-      <TimeLine onChange={setValue} value={value} />
+      <TimeLine onChange={setValue} value={value} maxTime={maxTime} />
       <svg ref={graphSvgRef} className="flex-1 w-full h-full" />
       <ChartTooltip ref={tooltipRef} />
     </div>
   );
 }
 
-function TimeLine({ onChange, value }: { onChange: (value: [number, number]) => void; value: [number, number] }) {
+function TimeLine({ onChange, value, maxTime }: { onChange: (value: [number, number]) => void; value: [number, number]; maxTime: number }) {
+  const maxSeconds = maxTime / 1000;
+  const numTicks = Math.floor(maxSeconds / 20) + 1;
+  const ticks = Array.from({ length: numTicks }, (_, i) => i * 20);
+
   return (
     <div className="flex flex-col gap-1 px-12 py-3 mx-8 mt-6 border shadow-sm rounded-xl border-border/60 bg-muted/40 backdrop-blur-sm">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <Label htmlFor="time-slider" className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
           Time filter
         </Label>
@@ -106,14 +110,19 @@ function TimeLine({ onChange, value }: { onChange: (value: [number, number]) => 
           {fmtS(value[0])} &ndash; {fmtS(value[1])}
         </span>
       </div>
-      <RangeSlider id="time-slider" value={value} onChange={onChange} min={0} max={MAX_S} step={0.25} />
-      <div className="relative flex justify-between px-0">
-        {RULER_TICKS.map((t, i) => (
-          <div key={t} className={`flex flex-col gap-1.5 justify-center ${i === 0 ? "items-start text-start" : "items-start text-end"}`} style={{ width: 0 }}>
-            <div className="w-0.5 h-2 bg-primary/20 rounded" />
-            <span className="font-mono text-[9px] text-muted-foreground -translate-x-1/2">{fmtS(t)}</span>
-          </div>
-        ))}
+
+      <RangeSlider id="time-slider" value={value} onChange={onChange} min={0} max={maxSeconds} step={0.25} />
+
+      <div className="relative w-full h-8 mt-2">
+        {ticks.map((t) => {
+          const leftPercent = (t / maxSeconds) * 100;
+          return (
+            <div key={t} className="absolute flex flex-col items-center gap-1.5" style={{ left: `${leftPercent}%`, transform: "translateX(-50%)" }}>
+              <div className="w-0.5 h-2 bg-primary/20 rounded" />
+              <span className="font-mono text-[9px] text-muted-foreground">{fmtS(t)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
