@@ -136,17 +136,6 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
     };
   }, [isPlaying, animate]);
 
-  useEffect(() => {
-    if (!isPlaying && currentTime === 0) return;
-
-    const activeCluster = getActiveClusterAtTime(currentTime, transitions, maxTime);
-
-    if (activeCluster !== activeClusterRef.current) {
-      activeClusterRef.current = activeCluster;
-      handleClusterHover(activeCluster);
-    }
-  }, [currentTime, transitions, maxTime, isPlaying]);
-
   const handleClusterHover = useCallback(
     (clusterId: number | null) => {
       const svg = select(graphSvgRef.current);
@@ -182,6 +171,17 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
     },
     [opacityScale],
   );
+
+  useEffect(() => {
+    if (!isPlaying && currentTime === 0) return;
+
+    const activeCluster = getActiveClusterAtTime(currentTime, transitions, maxTime);
+
+    if (activeCluster !== activeClusterRef.current) {
+      activeClusterRef.current = activeCluster;
+      handleClusterHover(activeCluster);
+    }
+  }, [currentTime, transitions, maxTime, isPlaying, handleClusterHover]);
 
   useEffect(() => {
     const basePlot = initializeBasePlot({ svgElement: graphSvgRef.current, data, width: graphSize.width, height: graphSize.height, xAxisLabel: GRAPH_X_LEGEND_TEXT, yAxisLabel: GRAPH_Y_LEGEND_TEXT, clipId });

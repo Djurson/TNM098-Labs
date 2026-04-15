@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { axisRight, scaleLinear, select, sum } from "d3";
 import { hexbin, HexbinBin } from "d3-hexbin";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP, HEX_RADIUS } from "@/lib/utils";
-import { applyChartInteractions, calculateContextSvgWidth, clearSvg, createClipPath, createCrosshair, createDensityColorScale, createPositionScales, createSvgRoot, drawAxes, initializeBasePlot } from "@/lib/plots/chart-utils";
+import { applyChartInteractions, calculateContextSvgWidth, clearSvg, createDensityColorScale, createPositionScales, createSvgRoot, initializeBasePlot } from "@/lib/plots/chart-utils";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 import { ChartTooltip, TooltipRef } from "../chart-tooltip";
 
@@ -79,7 +79,7 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
       colorDomain,
       gradientId,
     });
-  }, [data, graphSize.width, graphSize.height, gradientId, clipId, contextSvgWidth]);
+  }, [data, graphSize.width, graphSize.height, gradientId, clipId]);
 
   return (
     <div className="flex flex-col flex-1 h-full gap-2">

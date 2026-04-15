@@ -13,9 +13,6 @@ import { ChartTooltip, TooltipRef } from "../chart-tooltip";
 const GRAPH_X_LEGEND_TEXT = "Gaze X (px)";
 const GRAPH_Y_LEGEND_TEXT = "Gaze Y (px)";
 
-const MAX_S = 281;
-const RULER_TICKS = Array.from({ length: Math.floor(MAX_S / 20) + 1 }, (_, i) => i * 20);
-
 function formatToolTipData(d: EyeTrackDataPoint) {
   return {
     title: `Fixation ${d.fixationIndex}`,
@@ -80,7 +77,7 @@ export function ScatterPlot({ data, maxTime }: { data: EyeTrackDataPoint[]; maxT
         applyChartInteractions(selection, crosshair, tooltipRef.current, {
           getCrosshairPos: (d) => ({ x: scales.x(d.position.x), y: scales.y(d.position.y) }),
           getTooltipData: (d) => formatToolTipData(d),
-          onHoverIn: (element, d) => select(element).transition().duration(100).attr("fill-opacity", 1).attr("stroke-opacity", 1).attr("stroke-width", 2),
+          onHoverIn: (element, _) => select(element).transition().duration(100).attr("fill-opacity", 1).attr("stroke-opacity", 1).attr("stroke-width", 2),
           onHoverOut: (element, d) => select(element).transition().duration(250).attr("fill-opacity", opacityScale(d.gazeDuration)).attr("stroke-opacity", 0.5).attr("stroke-width", 0.5),
         }),
       );
