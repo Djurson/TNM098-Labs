@@ -55,7 +55,7 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, onHove
       </div>
 
       <TooltipProvider delayDuration={100}>
-        <div className="relative w-full h-4 overflow-hidden border rounded-md bg-muted/50 border-border/50">
+        <div className="relative flex items-center w-full h-4 overflow-hidden border rounded-md bg-muted/50 border-border/50">
           {blocks.map((block, i) => {
             const leftPercent = (block.start / maxTime) * 100;
             const widthPercent = ((block.end - block.start) / maxTime) * 100;
