@@ -3,7 +3,11 @@
 import { ClusterInfo, EyeTrackDataPoint } from "@/lib/types";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { GetClusterColor, SCATTER_POINTS_RADIUS } from "@/lib/utils";
-import { createOpacityScale, initializeBasePlot, applyChartInteractions } from "@/lib/plots/chart-utils";
+import {
+  createOpacityScale,
+  initializeBasePlot,
+  applyChartInteractions,
+} from "@/lib/plots/chart-utils";
 import { curveBasisClosed, group, line, polygonHull, select } from "d3";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 import { ChartTooltip, TooltipRef } from "../chart-tooltip";
@@ -88,6 +92,7 @@ function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
         });
         lastConfirmedCluster = point.cluster;
         startNode = point;
+        duration = point.gazeDuration;
       }
     } else {
       duration += point.gazeDuration;
@@ -121,7 +126,15 @@ function getActiveClusterAtTime(time: number, transitions: Transition[], maxTime
   return null;
 }
 
-export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoint[]; clusters: ClusterInfo[]; maxTime: number }) {
+export function ClusterPlot({
+  data,
+  clusters,
+  maxTime,
+}: {
+  data: EyeTrackDataPoint[];
+  clusters: ClusterInfo[];
+  maxTime: number;
+}) {
   const graphSvgRef = useRef<SVGSVGElement | null>(null);
   const tooltipRef = useRef<TooltipRef | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
@@ -198,8 +211,12 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
           .selectAll<SVGCircleElement, EyeTrackDataPoint>("circle.gaze-point")
           .transition()
           .duration(200)
-          .attr("fill-opacity", (d) => (d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.02))
-          .attr("stroke-opacity", (d) => (d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.05));
+          .attr("fill-opacity", (d) =>
+            d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.02,
+          )
+          .attr("stroke-opacity", (d) =>
+            d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.05,
+          );
 
         svg
           .selectAll("path.cluster-blob")
@@ -225,7 +242,15 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
   }, [currentTime, transitions, maxTime, isPlaying, handleClusterHover]);
 
   useEffect(() => {
-    const basePlot = initializeBasePlot({ svgElement: graphSvgRef.current, data, width: graphSize.width, height: graphSize.height, xAxisLabel: GRAPH_X_LEGEND_TEXT, yAxisLabel: GRAPH_Y_LEGEND_TEXT, clipId });
+    const basePlot = initializeBasePlot({
+      svgElement: graphSvgRef.current,
+      data,
+      width: graphSize.width,
+      height: graphSize.height,
+      xAxisLabel: GRAPH_X_LEGEND_TEXT,
+      yAxisLabel: GRAPH_Y_LEGEND_TEXT,
+      clipId,
+    });
     if (!basePlot) return;
 
     const { root, scales, crosshair } = basePlot;
@@ -237,7 +262,9 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
 
     clustersGrouped.forEach((pointsInCluster, clusterId) => {
       if (pointsInCluster.length < 3) return;
-      const coords = pointsInCluster.map((d) => [scales.x(d.position.x), scales.y(d.position.y)] as [number, number]);
+      const coords = pointsInCluster.map(
+        (d) => [scales.x(d.position.x), scales.y(d.position.y)] as [number, number],
+      );
 
       const hull = polygonHull(coords);
       if (!hull) return;
@@ -274,7 +301,13 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
         applyChartInteractions(selection, crosshair, tooltipRef.current, {
           getCrosshairPos: (d) => ({ x: scales.x(d.position.x), y: scales.y(d.position.y) }),
           getTooltipData: (d) => formatToolTipData(d),
-          onHoverIn: (element) => select(element).transition().duration(100).attr("fill-opacity", 1).attr("stroke-opacity", 1).attr("stroke-width", 2),
+          onHoverIn: (element) =>
+            select(element)
+              .transition()
+              .duration(100)
+              .attr("fill-opacity", 1)
+              .attr("stroke-opacity", 1)
+              .attr("stroke-width", 2),
           onHoverOut: (element, d) => {
             const active = activeClusterRef.current;
             const isDimmed = active !== null && active !== d.cluster;
@@ -282,7 +315,10 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
             select(element)
               .transition()
               .duration(250)
-              .attr("fill-opacity", d.cluster === -1 ? "0.05" : isDimmed ? 0.02 : opacityScale(d.gazeDuration))
+              .attr(
+                "fill-opacity",
+                d.cluster === -1 ? "0.05" : isDimmed ? 0.02 : opacityScale(d.gazeDuration),
+              )
               .attr("stroke-opacity", isDimmed ? 0.05 : 0.5)
               .attr("stroke-width", 0.5);
           },

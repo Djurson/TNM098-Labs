@@ -12,7 +12,7 @@ def process_and_bin_data():
     coords = df[['GazePointX(px)', 'GazePointY(px)']].fillna(0)
 
     # 1. DBSCAN SETTINGS
-    db = DBSCAN(eps=20, min_samples=3000)
+    db = DBSCAN(eps=25, min_samples=3000)
     
     # 2. FIT WITH SAMPLE WEIGHTS
     db.fit(coords, sample_weight=df['GazeEventDuration(mS)'])
