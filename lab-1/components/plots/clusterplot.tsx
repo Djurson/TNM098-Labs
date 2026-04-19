@@ -3,11 +3,7 @@
 import { ClusterInfo, EyeTrackDataPoint } from "@/lib/types";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { GetClusterColor, SCATTER_POINTS_RADIUS } from "@/lib/utils";
-import {
-  createOpacityScale,
-  initializeBasePlot,
-  applyChartInteractions,
-} from "@/lib/plots/chart-utils";
+import { createOpacityScale, initializeBasePlot, applyChartInteractions } from "@/lib/plots/chart-utils";
 import { curveBasisClosed, group, line, polygonHull, select } from "d3";
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 import { ChartTooltip, TooltipRef } from "../chart-tooltip";
@@ -15,7 +11,8 @@ import { ClusterTimeLine, Transition } from "./clustertimeline";
 
 const GRAPH_X_LEGEND_TEXT = "Gaze X (px)";
 const GRAPH_Y_LEGEND_TEXT = "Gaze Y (px)";
-const PLAYBACK_SPEED = 10;
+const PLAYBACK_SPEED = 2;
+const MIN_FOCUS_DURATION_MS = 500;
 
 function formatToolTipData(d: EyeTrackDataPoint) {
   return {
@@ -29,47 +26,7 @@ function formatToolTipData(d: EyeTrackDataPoint) {
   };
 }
 
-function fao(data: EyeTrackDataPoint[]): Transition[] {
-  if (!data || data.length === 0) return [];
-  const result = [];
-
-  let lastConfirmedCluster: number | null = null;
-  let potentialClusterStart: EyeTrackDataPoint | null = null;
-
-  for (let i = 0; i < data.length; i++) {
-    const p = data[i];
-
-    if (lastConfirmedCluster === null) {
-      lastConfirmedCluster = p.cluster;
-      potentialClusterStart = p;
-      continue;
-    }
-
-    if (p.cluster !== lastConfirmedCluster) {
-      if (potentialClusterStart === null || potentialClusterStart.cluster !== p.cluster) {
-        potentialClusterStart = p;
-      }
-      // Checks so the focus on a new cluster is longer or equal to at least 1s.
-      const duration = p.timeStamp - potentialClusterStart.timeStamp + p.gazeDuration;
-      if (duration >= 500) {
-        result.push({
-          from: lastConfirmedCluster,
-          to: p.cluster,
-          timestamp: potentialClusterStart.timeStamp,
-          fixationIndex: potentialClusterStart.fixationIndex,
-          stayDuration: duration,
-        });
-        lastConfirmedCluster = p.cluster;
-        potentialClusterStart = p;
-      }
-    } else {
-      potentialClusterStart = p;
-    }
-  }
-  return result;
-}
-
-function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
+export function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
   if (!data || data.length === 0) return [];
 
   const result: Transition[] = [];
@@ -81,34 +38,34 @@ function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
   for (let i = 1; i < data.length; i++) {
     const point = data[i];
 
-    if (point.cluster !== lastConfirmedCluster) {
-      if (duration >= 1000) {
-        result.push({
-          from: lastConfirmedCluster,
-          to: point.cluster,
-          timestamp: startNode.timeStamp,
-          fixationIndex: startNode.fixationIndex,
-          stayDuration: duration,
-        });
-        lastConfirmedCluster = point.cluster;
-        startNode = point;
-        duration = point.gazeDuration;
-      }
-    } else {
+    if (point.cluster === lastConfirmedCluster) {
       duration += point.gazeDuration;
+      continue;
+    }
+
+    if (duration >= MIN_FOCUS_DURATION_MS) {
+      result.push({
+        from: lastConfirmedCluster,
+        to: point.cluster,
+        timestamp: startNode.timeStamp,
+        fixationIndex: startNode.fixationIndex,
+        stayDuration: duration,
+      });
+    }
+    lastConfirmedCluster = point.cluster;
+    startNode = point;
+    duration = point.gazeDuration;
+
+    if (duration >= MIN_FOCUS_DURATION_MS && i === data.length - 1) {
+      result.push({
+        from: lastConfirmedCluster,
+        to: point.cluster,
+        timestamp: startNode.timeStamp,
+        fixationIndex: startNode.fixationIndex,
+        stayDuration: duration,
+      });
     }
   }
-  return result;
-}
-
-function foo2(data: EyeTrackDataPoint[]): Transition[] {
-  if (!data || data.length === 0) return [];
-
-  const result: Transition[] = [];
-
-  let currentClusterIndex: number = data[0].cluster;
-  let tempCluster: number | null = null;
-
   return result;
 }
 
@@ -126,15 +83,7 @@ function getActiveClusterAtTime(time: number, transitions: Transition[], maxTime
   return null;
 }
 
-export function ClusterPlot({
-  data,
-  clusters,
-  maxTime,
-}: {
-  data: EyeTrackDataPoint[];
-  clusters: ClusterInfo[];
-  maxTime: number;
-}) {
+export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoint[]; clusters: ClusterInfo[]; maxTime: number }) {
   const graphSvgRef = useRef<SVGSVGElement | null>(null);
   const tooltipRef = useRef<TooltipRef | null>(null);
   const [transitions, setTransitions] = useState<Transition[]>([]);
@@ -211,12 +160,8 @@ export function ClusterPlot({
           .selectAll<SVGCircleElement, EyeTrackDataPoint>("circle.gaze-point")
           .transition()
           .duration(200)
-          .attr("fill-opacity", (d) =>
-            d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.02,
-          )
-          .attr("stroke-opacity", (d) =>
-            d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.05,
-          );
+          .attr("fill-opacity", (d) => (d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.02))
+          .attr("stroke-opacity", (d) => (d.cluster === targetCluster ? opacityScale(d.gazeDuration) : 0.05));
 
         svg
           .selectAll("path.cluster-blob")
@@ -262,9 +207,7 @@ export function ClusterPlot({
 
     clustersGrouped.forEach((pointsInCluster, clusterId) => {
       if (pointsInCluster.length < 3) return;
-      const coords = pointsInCluster.map(
-        (d) => [scales.x(d.position.x), scales.y(d.position.y)] as [number, number],
-      );
+      const coords = pointsInCluster.map((d) => [scales.x(d.position.x), scales.y(d.position.y)] as [number, number]);
 
       const hull = polygonHull(coords);
       if (!hull) return;
@@ -301,13 +244,7 @@ export function ClusterPlot({
         applyChartInteractions(selection, crosshair, tooltipRef.current, {
           getCrosshairPos: (d) => ({ x: scales.x(d.position.x), y: scales.y(d.position.y) }),
           getTooltipData: (d) => formatToolTipData(d),
-          onHoverIn: (element) =>
-            select(element)
-              .transition()
-              .duration(100)
-              .attr("fill-opacity", 1)
-              .attr("stroke-opacity", 1)
-              .attr("stroke-width", 2),
+          onHoverIn: (element) => select(element).transition().duration(100).attr("fill-opacity", 1).attr("stroke-opacity", 1).attr("stroke-width", 2),
           onHoverOut: (element, d) => {
             const active = activeClusterRef.current;
             const isDimmed = active !== null && active !== d.cluster;
@@ -315,10 +252,7 @@ export function ClusterPlot({
             select(element)
               .transition()
               .duration(250)
-              .attr(
-                "fill-opacity",
-                d.cluster === -1 ? "0.05" : isDimmed ? 0.02 : opacityScale(d.gazeDuration),
-              )
+              .attr("fill-opacity", d.cluster === -1 ? "0.05" : isDimmed ? 0.02 : opacityScale(d.gazeDuration))
               .attr("stroke-opacity", isDimmed ? 0.05 : 0.5)
               .attr("stroke-width", 0.5);
           },

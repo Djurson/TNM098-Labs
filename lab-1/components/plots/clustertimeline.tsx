@@ -38,10 +38,17 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlay
 
   const blocks = [];
   if (transitions && transitions.length > 0) {
-    blocks.push({ cluster: transitions[0].from, start: 0, end: transitions[0].timestamp });
-
     for (let i = 0; i < transitions.length; i++) {
-      blocks.push({ cluster: transitions[i].to, start: transitions[i].timestamp, end: i < transitions.length - 1 ? transitions[i + 1].timestamp : maxTime });
+      blocks.push({
+        // 1. Use 'from' (what they were looking at during this duration)
+        cluster: transitions[i].from,
+
+        // 2. Start exactly when they started looking
+        start: transitions[i].timestamp,
+
+        // 3. End EXACTLY when they stopped (this creates natural gaps for noise!)
+        end: transitions[i].timestamp + transitions[i].stayDuration,
+      });
     }
   }
 

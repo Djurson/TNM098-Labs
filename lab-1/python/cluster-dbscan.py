@@ -12,7 +12,7 @@ def process_and_bin_data():
     coords = df[['GazePointX(px)', 'GazePointY(px)']].fillna(0)
 
     # 1. DBSCAN SETTINGS
-    db = DBSCAN(eps=25, min_samples=3000)
+    db = DBSCAN(eps=25, min_samples=4000)
     
     # 2. FIT WITH SAMPLE WEIGHTS
     db.fit(coords, sample_weight=df['GazeEventDuration(mS)'])
@@ -30,6 +30,9 @@ def process_and_bin_data():
                 "y": float(row['GazePointY(px)'])
             }
         })
+
+    bin_size = 15000 
+    df['time_bin'] = (df['RecordingTimestamp'] // bin_size) * bin_size
 
     # 5. Calculate frequency
     freq = df.groupby(['time_bin', 'cluster']).size().unstack(fill_value=0).reset_index()

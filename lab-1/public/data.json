@@ -3,50 +3,50 @@
     {
       "label": 0,
       "center": {
-        "x": 518.1637931034483,
-        "y": 233.85344827586206
+        "x": 516.6935483870968,
+        "y": 234.96774193548387
       }
     },
     {
       "label": 1,
       "center": {
-        "x": 285.3644859813084,
-        "y": 232.51401869158877
+        "x": 287.25454545454545,
+        "y": 233.1818181818182
       }
     },
     {
       "label": 2,
       "center": {
-        "x": 812.2777777777778,
-        "y": 238.94444444444446
+        "x": 809.0,
+        "y": 240.5909090909091
       }
     },
     {
       "label": 3,
       "center": {
-        "x": 920.1,
-        "y": 243.5
+        "x": 925.0,
+        "y": 244.83333333333334
       }
     },
     {
       "label": 4,
       "center": {
-        "x": 402.11538461538464,
-        "y": 791.5769230769231
+        "x": 399.02777777777777,
+        "y": 792.2777777777778
       }
     },
     {
       "label": 5,
       "center": {
-        "x": 1257.9722222222222,
-        "y": 779.6388888888889
+        "x": 1257.923076923077,
+        "y": 780.6666666666666
       }
     },
     {
       "label": 6,
       "center": {
-        "x": 1424.3783783783783,
-        "y": 780.027027027027
+        "x": 1431.0666666666666,
+        "y": 780.8444444444444
       }
     }
   ],
@@ -199,7 +199,7 @@
       "fixationIndex": 14,
       "gazeDuration": 207,
       "gazePointIndex": 942,
-      "cluster": -1,
+      "cluster": 2,
       "position": {
         "x": 801.0,
         "y": 271.0
@@ -496,7 +496,7 @@
       "fixationIndex": 41,
       "gazeDuration": 180,
       "gazePointIndex": 4753,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 533.0,
         "y": 285.0
@@ -551,7 +551,7 @@
       "fixationIndex": 46,
       "gazeDuration": 503,
       "gazePointIndex": 5839,
-      "cluster": -1,
+      "cluster": 1,
       "position": {
         "x": 365.0,
         "y": 248.0
@@ -1211,7 +1211,7 @@
       "fixationIndex": 106,
       "gazeDuration": 673,
       "gazePointIndex": 13826,
-      "cluster": -1,
+      "cluster": 3,
       "position": {
         "x": 954.0,
         "y": 239.0
@@ -1409,7 +1409,7 @@
       "fixationIndex": 124,
       "gazeDuration": 190,
       "gazePointIndex": 15671,
-      "cluster": -1,
+      "cluster": 2,
       "position": {
         "x": 811.0,
         "y": 217.0
@@ -1860,7 +1860,7 @@
       "fixationIndex": 165,
       "gazeDuration": 747,
       "gazePointIndex": 19723,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 409.0,
         "y": 825.0
@@ -2146,7 +2146,7 @@
       "fixationIndex": 191,
       "gazeDuration": 800,
       "gazePointIndex": 22052,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 380.0,
         "y": 824.0
@@ -2234,7 +2234,7 @@
       "fixationIndex": 199,
       "gazeDuration": 607,
       "gazePointIndex": 22946,
-      "cluster": -1,
+      "cluster": 3,
       "position": {
         "x": 945.0,
         "y": 264.0
@@ -2399,7 +2399,7 @@
       "fixationIndex": 214,
       "gazeDuration": 337,
       "gazePointIndex": 25064,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 606.0,
         "y": 216.0
@@ -2850,7 +2850,7 @@
       "fixationIndex": 255,
       "gazeDuration": 293,
       "gazePointIndex": 29736,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 380.0,
         "y": 823.0
@@ -3059,7 +3059,7 @@
       "fixationIndex": 274,
       "gazeDuration": 397,
       "gazePointIndex": 32265,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 436.0,
         "y": 770.0
@@ -3290,7 +3290,7 @@
       "fixationIndex": 295,
       "gazeDuration": 503,
       "gazePointIndex": 34470,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 434.0,
         "y": 825.0
@@ -3334,7 +3334,7 @@
       "fixationIndex": 299,
       "gazeDuration": 167,
       "gazePointIndex": 34991,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 350.0,
         "y": 796.0
@@ -3477,7 +3477,7 @@
       "fixationIndex": 312,
       "gazeDuration": 313,
       "gazePointIndex": 36598,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1475.0,
         "y": 790.0
@@ -3818,7 +3818,7 @@
       "fixationIndex": 343,
       "gazeDuration": 127,
       "gazePointIndex": 39537,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 366.0,
         "y": 751.0
@@ -4049,7 +4049,7 @@
       "fixationIndex": 364,
       "gazeDuration": 397,
       "gazePointIndex": 41726,
-      "cluster": -1,
+      "cluster": 5,
       "position": {
         "x": 1307.0,
         "y": 783.0
@@ -4280,7 +4280,7 @@
       "fixationIndex": 385,
       "gazeDuration": 163,
       "gazePointIndex": 44221,
-      "cluster": -1,
+      "cluster": 5,
       "position": {
         "x": 1210.0,
         "y": 780.0
@@ -4291,7 +4291,7 @@
       "fixationIndex": 386,
       "gazeDuration": 347,
       "gazePointIndex": 44270,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1467.0,
         "y": 791.0
@@ -4467,7 +4467,7 @@
       "fixationIndex": 402,
       "gazeDuration": 647,
       "gazePointIndex": 46076,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1374.0,
         "y": 750.0
@@ -4566,7 +4566,7 @@
       "fixationIndex": 411,
       "gazeDuration": 350,
       "gazePointIndex": 47817,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1464.0,
         "y": 801.0
@@ -4742,7 +4742,7 @@
       "fixationIndex": 427,
       "gazeDuration": 233,
       "gazePointIndex": 49491,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1475.0,
         "y": 778.0
@@ -4808,7 +4808,7 @@
       "fixationIndex": 433,
       "gazeDuration": 230,
       "gazePointIndex": 49990,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1487.0,
         "y": 777.0
@@ -4929,7 +4929,7 @@
       "fixationIndex": 444,
       "gazeDuration": 397,
       "gazePointIndex": 51064,
-      "cluster": -1,
+      "cluster": 5,
       "position": {
         "x": 1255.0,
         "y": 816.0
@@ -5655,7 +5655,7 @@
       "fixationIndex": 510,
       "gazeDuration": 287,
       "gazePointIndex": 59594,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1473.0,
         "y": 790.0
@@ -5666,7 +5666,7 @@
       "fixationIndex": 511,
       "gazeDuration": 160,
       "gazePointIndex": 59680,
-      "cluster": -1,
+      "cluster": 6,
       "position": {
         "x": 1481.0,
         "y": 800.0
@@ -5886,7 +5886,7 @@
       "fixationIndex": 531,
       "gazeDuration": 460,
       "gazePointIndex": 61634,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 534.0,
         "y": 275.0
@@ -6392,7 +6392,7 @@
       "fixationIndex": 577,
       "gazeDuration": 150,
       "gazePointIndex": 68281,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 480.0,
         "y": 189.0
@@ -6425,7 +6425,7 @@
       "fixationIndex": 580,
       "gazeDuration": 30,
       "gazePointIndex": 68847,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 537.0,
         "y": 279.0
@@ -6480,7 +6480,7 @@
       "fixationIndex": 585,
       "gazeDuration": 620,
       "gazePointIndex": 69413,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 399.0,
         "y": 754.0
@@ -7173,7 +7173,7 @@
       "fixationIndex": 648,
       "gazeDuration": 437,
       "gazePointIndex": 77279,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 356.0,
         "y": 823.0
@@ -7195,7 +7195,7 @@
       "fixationIndex": 650,
       "gazeDuration": 423,
       "gazePointIndex": 77569,
-      "cluster": -1,
+      "cluster": 1,
       "position": {
         "x": 348.0,
         "y": 263.0
@@ -7206,7 +7206,7 @@
       "fixationIndex": 651,
       "gazeDuration": 580,
       "gazePointIndex": 77696,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 424.0,
         "y": 258.0
@@ -7261,7 +7261,7 @@
       "fixationIndex": 656,
       "gazeDuration": 323,
       "gazePointIndex": 78140,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 438.0,
         "y": 264.0
@@ -7294,7 +7294,7 @@
       "fixationIndex": 659,
       "gazeDuration": 160,
       "gazePointIndex": 78450,
-      "cluster": -1,
+      "cluster": 4,
       "position": {
         "x": 400.0,
         "y": 750.0
@@ -7415,7 +7415,7 @@
       "fixationIndex": 670,
       "gazeDuration": 73,
       "gazePointIndex": 79383,
-      "cluster": -1,
+      "cluster": 1,
       "position": {
         "x": 351.0,
         "y": 260.0
@@ -7558,7 +7558,7 @@
       "fixationIndex": 683,
       "gazeDuration": 20,
       "gazePointIndex": 79959,
-      "cluster": -1,
+      "cluster": 2,
       "position": {
         "x": 779.0,
         "y": 250.0
@@ -7690,7 +7690,7 @@
       "fixationIndex": 695,
       "gazeDuration": 353,
       "gazePointIndex": 80833,
-      "cluster": -1,
+      "cluster": 2,
       "position": {
         "x": 786.0,
         "y": 254.0
@@ -7800,7 +7800,7 @@
       "fixationIndex": 705,
       "gazeDuration": 420,
       "gazePointIndex": 81574,
-      "cluster": -1,
+      "cluster": 0,
       "position": {
         "x": 411.0,
         "y": 243.0
@@ -8239,10 +8239,10 @@
   "frequency": [
     {
       "time_bin": 0,
-      "-1": 15,
+      "-1": 14,
       "0": 16,
       "1": 5,
-      "2": 1,
+      "2": 2,
       "3": 0,
       "4": 0,
       "5": 0,
@@ -8250,9 +8250,9 @@
     },
     {
       "time_bin": 15000,
-      "-1": 14,
-      "0": 5,
-      "1": 8,
+      "-1": 12,
+      "0": 6,
+      "1": 9,
       "2": 1,
       "3": 1,
       "4": 0,
@@ -8272,102 +8272,102 @@
     },
     {
       "time_bin": 45000,
-      "-1": 13,
+      "-1": 11,
       "0": 10,
       "1": 10,
-      "2": 4,
-      "3": 4,
+      "2": 5,
+      "3": 5,
       "4": 1,
       "5": 0,
       "6": 0
     },
     {
       "time_bin": 60000,
-      "-1": 28,
+      "-1": 26,
       "0": 9,
       "1": 5,
       "2": 1,
       "3": 0,
-      "4": 4,
+      "4": 6,
       "5": 0,
       "6": 0
     },
     {
       "time_bin": 75000,
-      "-1": 15,
-      "0": 7,
+      "-1": 13,
+      "0": 8,
       "1": 6,
       "2": 3,
-      "3": 1,
+      "3": 2,
       "4": 1,
       "5": 0,
       "6": 0
     },
     {
       "time_bin": 90000,
-      "-1": 19,
+      "-1": 18,
       "0": 6,
       "1": 8,
       "2": 3,
       "3": 2,
-      "4": 3,
+      "4": 4,
       "5": 0,
       "6": 0
     },
     {
       "time_bin": 105000,
-      "-1": 26,
+      "-1": 23,
       "0": 5,
       "1": 4,
       "2": 0,
       "3": 0,
-      "4": 2,
+      "4": 5,
       "5": 3,
       "6": 1
     },
     {
       "time_bin": 120000,
-      "-1": 21,
+      "-1": 19,
       "0": 0,
       "1": 0,
       "2": 0,
       "3": 0,
-      "4": 1,
+      "4": 2,
       "5": 10,
-      "6": 11
+      "6": 12
     },
     {
       "time_bin": 135000,
-      "-1": 24,
+      "-1": 21,
       "0": 1,
       "1": 0,
       "2": 0,
       "3": 0,
       "4": 1,
-      "5": 7,
-      "6": 9
+      "5": 9,
+      "6": 10
     },
     {
       "time_bin": 150000,
-      "-1": 18,
+      "-1": 15,
       "0": 0,
       "1": 0,
       "2": 0,
       "3": 0,
       "4": 1,
       "5": 9,
-      "6": 6
+      "6": 9
     },
     {
       "time_bin": 165000,
-      "-1": 31,
+      "-1": 29,
       "0": 1,
       "1": 0,
       "2": 0,
       "3": 0,
       "4": 1,
-      "5": 4,
-      "6": 8
+      "5": 5,
+      "6": 9
     },
     {
       "time_bin": 180000,
@@ -8382,14 +8382,14 @@
     },
     {
       "time_bin": 195000,
-      "-1": 24,
-      "0": 8,
+      "-1": 21,
+      "0": 9,
       "1": 3,
       "2": 0,
       "3": 0,
       "4": 1,
       "5": 3,
-      "6": 1
+      "6": 3
     },
     {
       "time_bin": 210000,
@@ -8404,12 +8404,12 @@
     },
     {
       "time_bin": 225000,
-      "-1": 31,
-      "0": 4,
+      "-1": 28,
+      "0": 6,
       "1": 3,
       "2": 0,
       "3": 0,
-      "4": 1,
+      "4": 2,
       "5": 0,
       "6": 0
     },
@@ -8426,19 +8426,19 @@
     },
     {
       "time_bin": 255000,
-      "-1": 34,
-      "0": 5,
-      "1": 16,
-      "2": 1,
+      "-1": 26,
+      "0": 7,
+      "1": 18,
+      "2": 3,
       "3": 0,
-      "4": 6,
+      "4": 8,
       "5": 0,
       "6": 0
     },
     {
       "time_bin": 270000,
-      "-1": 18,
-      "0": 11,
+      "-1": 17,
+      "0": 12,
       "1": 8,
       "2": 4,
       "3": 2,
