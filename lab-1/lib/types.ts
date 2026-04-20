@@ -47,3 +47,11 @@ export type ClusterInfo = {
   label: number;
   center: Vector2;
 };
+
+export type Transition = {
+  from: number;
+  to: number;
+  timestamp: number;
+  fixationIndex: number;
+  stayDuration: number;
+};

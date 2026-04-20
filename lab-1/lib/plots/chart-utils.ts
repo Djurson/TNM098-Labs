@@ -2,6 +2,7 @@ import { extent, format, interpolateOrRd, max, scaleLinear, scaleSequential, sel
 import type { HexbinBin } from "d3-hexbin";
 import { EyeTrackDataPoint, TooltipData } from "@/lib/types";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP } from "../utils";
+import { TooltipRef } from "@/components/chart-tooltip";
 
 export type ChartSize = {
   width: number;
@@ -33,7 +34,7 @@ export function createPositionScales(data: EyeTrackDataPoint[], size: ChartSize,
   const yExtent = extent(data, (d) => d.position.y);
 
   if (xExtent[0] === undefined || xExtent[1] === undefined || yExtent[0] === undefined || yExtent[1] === undefined) {
-    return undefined;
+    return;
   }
 
   const x = scaleLinear()
@@ -229,19 +230,12 @@ export function initializeBasePlot(config: {
 
 interface InteractionConfig<T> {
   getCrosshairPos: (d: T) => { x: number; y: number };
-
   getTooltipData: (d: T) => TooltipData;
-
   onHoverIn: (element: any, d: T) => void;
   onHoverOut: (element: any, d: T) => void;
 }
 
-export function applyChartInteractions<T>(
-  selection: Selection<any, T, any, any>,
-  crosshair: { show: (x: number, y: number) => void; hide: () => void },
-  tooltip: any, // Pass your TooltipRef | null
-  config: InteractionConfig<T>,
-) {
+export function applyChartInteractions<T>(selection: Selection<any, T, any, any>, crosshair: { show: (x: number, y: number) => void; hide: () => void }, tooltip: TooltipRef | null, config: InteractionConfig<T>) {
   selection
     .on("mouseover", function (e, d) {
       config.onHoverIn(this, d);

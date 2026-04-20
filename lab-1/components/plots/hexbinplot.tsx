@@ -71,14 +71,7 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
       tooltip: tooltipRef.current,
     });
 
-    drawGraphContext({
-      svgElement: graphContextSvg,
-      width: graphContextWidth,
-      height: graphContextHeight,
-      color: colorScale,
-      colorDomain,
-      gradientId,
-    });
+    drawGraphContext(graphContextSvg, graphContextWidth, graphContextHeight, colorScale, colorDomain, gradientId);
   }, [data, graphSize.width, graphSize.height, gradientId, clipId]);
 
   return (
@@ -164,7 +157,7 @@ function drawHexbinGraph({
     );
 }
 
-function drawGraphContext({ svgElement, width, height, color, colorDomain, gradientId }: { svgElement: SVGSVGElement; width: number; height: number; color: (value: number) => string; colorDomain: [number, number]; gradientId: string }) {
+function drawGraphContext(svgElement: SVGSVGElement, width: number, height: number, color: (value: number) => string, colorDomain: [number, number], gradientId: string) {
   const root = createSvgRoot(svgElement, width, height);
 
   root.selectAll("*").remove();

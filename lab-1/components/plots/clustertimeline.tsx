@@ -1,15 +1,24 @@
+"use client";
+
 import { Label } from "@/components/ui/label";
 import { GetClusterColor } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "../ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Transition } from "@/lib/types";
 
-export type Transition = {
-  from: number;
-  to: number;
-  timestamp: number;
-  fixationIndex: number;
-  stayDuration: number;
+type ClusterTimeLineProps = {
+  transitions: Transition[];
+  numberOfClusters: number;
+  maxTime: number;
+  isPlaying: boolean;
+  currentTime: number;
+  playbackSpeed: number;
+  onHoverCluster?: (clusterId: number | null) => void;
+  onClickPlay: () => void;
+  onClickRestart: () => void;
+  onSpeedChange: (speed: number) => void;
 };
 
 function formatMilliSecToSec(ms: number) {
@@ -19,34 +28,26 @@ function formatMilliSecToSec(ms: number) {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
-type ClusterTimeLineProps = {
-  transitions: Transition[];
-  numberOfClusters: number;
-  maxTime: number;
-  isPlaying: boolean;
-  currentTime: number;
-  onHoverCluster?: (clusterId: number | null) => void;
-  onClickPlay: () => void;
-  onClickRestart: () => void;
-};
+const SPEED_OPTIONS: { label: string; value: number }[] = [
+  { label: "1x", value: 1 },
+  { label: "2x", value: 2 },
+  { label: "5x", value: 5 },
+  { label: "10x", value: 10 },
+];
 
-export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlaying, currentTime, onHoverCluster, onClickPlay, onClickRestart }: ClusterTimeLineProps) {
+export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlaying, currentTime, playbackSpeed, onHoverCluster, onClickPlay, onClickRestart, onSpeedChange }: ClusterTimeLineProps) {
   const maxSeconds = maxTime / 1000;
   const tickInterval = 20;
   const numTicks = Math.floor(maxSeconds / tickInterval) + 1;
   const ticks = Array.from({ length: numTicks }, (_, i) => i * tickInterval);
 
   const blocks = [];
+
   if (transitions && transitions.length > 0) {
     for (let i = 0; i < transitions.length; i++) {
       blocks.push({
-        // 1. Use 'from' (what they were looking at during this duration)
         cluster: transitions[i].from,
-
-        // 2. Start exactly when they started looking
         start: transitions[i].timestamp,
-
-        // 3. End EXACTLY when they stopped (this creates natural gaps for noise!)
         end: transitions[i].timestamp + transitions[i].stayDuration,
       });
     }
@@ -56,8 +57,29 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlay
     <div className="flex flex-col w-full gap-3 pb-2">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">Cluster Dominance</Label>
+
         <div className="flex items-center gap-3">
-          <Button onClick={onClickPlay} variant={isPlaying ? "outline" : "default"} className="w-32">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Speed</span>
+            <ToggleGroup
+              type="single"
+              size="sm"
+              value={String(playbackSpeed)}
+              onValueChange={(val) => {
+                if (val) onSpeedChange(Number(val));
+              }}
+              className="border rounded-md bg-muted/50 border-border/50 p-0.5 gap-0.5">
+              {SPEED_OPTIONS.map((opt) => (
+                <ToggleGroupItem key={opt.value} value={String(opt.value)} className="h-7 px-2.5 text-xs font-mono rounded data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm transition-all">
+                  {opt.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          <Button onClick={onClickPlay} variant={isPlaying ? "outline" : "default"} className="w-24">
             {isPlaying ? "Pause" : "Play"}
           </Button>
           <Button onClick={onClickRestart} variant="secondary">
@@ -70,13 +92,15 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlay
       </div>
 
       <TooltipProvider delayDuration={100}>
-        {/* Removed overflow-hidden so the scaled blocks can pop out */}
         <div className="relative flex items-center w-full h-4 border rounded-md bg-muted/50 border-border/50">
           {blocks.map((block, i) => {
             const leftPercent = (block.start / maxTime) * 100;
             const widthPercent = ((block.end - block.start) / maxTime) * 100;
             const isLastBlock = i === blocks.length - 1;
-            const isActive = currentTime >= block.start && (currentTime < block.end || (isLastBlock && currentTime === maxTime && currentTime > 0));
+            const isNoise = block.cluster === -1;
+            const isActive = !isNoise && ((currentTime >= block.start && currentTime < block.end) || (isLastBlock && currentTime === maxTime && currentTime > 0));
+
+            if (isNoise) return <div key={i} className="absolute top-0 h-full" style={{ left: `${leftPercent}%`, width: `${widthPercent}%` }} />;
 
             return (
               <Tooltip key={i}>
@@ -134,6 +158,13 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlay
             </div>
           </div>
         ))}
+        <div className="flex items-center gap-5">
+          <Separator orientation="vertical" />
+          <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:opacity-70 transition-opacity" onMouseEnter={() => !isPlaying && onHoverCluster?.(-1)} onMouseLeave={() => !isPlaying && onHoverCluster?.(null)}>
+            <div className="rounded-md size-4 bg-black/80" />
+            <p className="text-xs text-muted-foreground">Noise</p>
+          </div>
+        </div>
       </div>
     </div>
   );
