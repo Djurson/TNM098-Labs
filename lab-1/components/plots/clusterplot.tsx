@@ -30,9 +30,8 @@ export function extractTransitions(data: EyeTrackDataPoint[]): Transition[] {
 
   for (let i = 1; i < data.length; i++) {
     const point = data[i];
-    if (point.cluster === runCluster) {
-      runDuration += point.gazeDuration;
-    } else {
+    if (point.cluster === runCluster) runDuration += point.gazeDuration;
+    else {
       commitRun(point.cluster);
       runCluster = point.cluster;
       runStart = point;
@@ -82,9 +81,7 @@ export function fillTransitionGaps(transitions: Transition[], maxTime: number): 
 
 /** Returns the active cluster (possibly -1 for noise) at a given timestamp. */
 function getActiveClusterAtTime(time: number, transitions: Transition[]): number | null {
-  for (const t of transitions) {
-    if (time >= t.timestamp && time <= t.timestamp + t.stayDuration) return t.from;
-  }
+  for (const t of transitions) if (time >= t.timestamp && time <= t.timestamp + t.stayDuration) return t.from;
   return null;
 }
 

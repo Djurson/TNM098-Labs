@@ -44,11 +44,7 @@ export function ScatterPlot({ data, maxTime }: { data: EyeTrackDataPoint[]; maxT
 
   const filteredData = useMemo(() => {
     if (!data || data.length === 0) return [];
-
-    return data.filter((d) => {
-      const time = d.timeStamp;
-      return time >= deferredValue[0] * 1000 && time <= deferredValue[1] * 1000;
-    });
+    return data.filter((d) => d.timeStamp >= deferredValue[0] * 1000 && d.timeStamp <= deferredValue[1] * 1000);
   }, [data, deferredValue]);
 
   useEffect(() => {
@@ -111,15 +107,12 @@ function TimeLine({ onChange, value, maxTime }: { onChange: (value: [number, num
       <RangeSlider id="time-slider" value={value} onChange={onChange} min={0} max={maxSeconds} step={0.25} />
 
       <div className="relative w-full h-8 mt-2">
-        {ticks.map((t) => {
-          const leftPercent = (t / maxSeconds) * 100;
-          return (
-            <div key={t} className="absolute flex flex-col items-center gap-1.5" style={{ left: `${leftPercent}%`, transform: "translateX(-50%)" }}>
-              <div className="w-0.5 h-2 bg-primary/20 rounded" />
-              <span className="font-mono text-[9px] text-muted-foreground">{fmtS(t)}</span>
-            </div>
-          );
-        })}
+        {ticks.map((t) => (
+          <div key={t} className="absolute flex flex-col items-center gap-1.5" style={{ left: `${(t / maxSeconds) * 100}%`, transform: "translateX(-50%)" }}>
+            <div className="w-0.5 h-2 bg-primary/20 rounded" />
+            <span className="font-mono text-[9px] text-muted-foreground">{fmtS(t)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

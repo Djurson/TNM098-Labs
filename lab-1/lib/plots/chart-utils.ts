@@ -1,13 +1,12 @@
-import { extent, format, interpolateOrRd, max, scaleLinear, scaleSequential, select, sum, axisBottom, axisLeft, type ScaleLinear, type ScaleSequential, type Selection } from "d3";
+import { extent, format, interpolateOrRd, max, scaleLinear, scaleSequential, select, sum, axisBottom, axisLeft, axisTop, type ScaleLinear, type ScaleSequential, type Selection } from "d3";
 import type { HexbinBin } from "d3-hexbin";
 import { EyeTrackDataPoint, TooltipData } from "@/lib/types";
 import { GRAPH_MARGIN_BOTTOM, GRAPH_MARGIN_LEFT, GRAPH_MARGIN_RIGHT, GRAPH_MARGIN_TOP } from "../utils";
 import { TooltipRef } from "@/components/chart-tooltip";
 
-export type ChartSize = {
-  width: number;
-  height: number;
-};
+const INVERTED_Y_AXIS = false;
+
+export type ChartSize = { width: number; height: number };
 
 export type ChartMargins = {
   top: number;
@@ -16,26 +15,24 @@ export type ChartMargins = {
   left: number;
 };
 
-export type PositionScales = {
-  x: ScaleLinear<number, number>;
-  y: ScaleLinear<number, number>;
-};
+export type PositionScales = { x: ScaleLinear<number, number>; y: ScaleLinear<number, number> };
 
-export function clearSvg(svgElement: SVGSVGElement) {
-  select(svgElement).selectAll("*").remove();
+interface InteractionConfig<T> {
+  getCrosshairPos: (d: T) => { x: number; y: number };
+  getTooltipData: (d: T) => TooltipData;
+  onHoverIn: (element: any, d: T) => void;
+  onHoverOut: (element: any, d: T) => void;
 }
 
-export function createSvgRoot(svgElement: SVGSVGElement, width: number, height: number) {
-  return select(svgElement).attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
-}
+export const clearSvg = (svgElement: SVGSVGElement) => select(svgElement).selectAll("*").remove();
+
+export const createSvgRoot = (svgElement: SVGSVGElement, width: number, height: number) => select(svgElement).attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");
 
 export function createPositionScales(data: EyeTrackDataPoint[], size: ChartSize, margins: ChartMargins = { top: GRAPH_MARGIN_TOP, bottom: GRAPH_MARGIN_BOTTOM, left: GRAPH_MARGIN_LEFT, right: GRAPH_MARGIN_RIGHT }): PositionScales | undefined {
   const xExtent = extent(data, (d) => d.position.x);
   const yExtent = extent(data, (d) => d.position.y);
 
-  if (xExtent[0] === undefined || xExtent[1] === undefined || yExtent[0] === undefined || yExtent[1] === undefined) {
-    return;
-  }
+  if (xExtent[0] === undefined || xExtent[1] === undefined || yExtent[0] === undefined || yExtent[1] === undefined) return;
 
   const x = scaleLinear()
     .domain([xExtent[0], xExtent[1] + 100])
@@ -45,7 +42,7 @@ export function createPositionScales(data: EyeTrackDataPoint[], size: ChartSize,
   const y = scaleLinear()
     .domain(yExtent)
     .nice()
-    .rangeRound([size.height - margins.bottom, margins.top]);
+    .rangeRound(INVERTED_Y_AXIS ? [margins.top, size.height - margins.bottom] : [size.height - margins.bottom, margins.top]);
 
   return { x, y };
 }
@@ -63,15 +60,11 @@ export function createDensityColorScale(bins: HexbinBin<EyeTrackDataPoint>[]): {
 
 export function calculateContextSvgWidth(colorDomain: [number, number], legend_text: string) {
   const measureTextWidth = (text: string, font = "600 12px sans-serif") => {
-    if (typeof document === "undefined") {
-      return text.length * 8;
-    }
+    if (typeof document === "undefined") return text.length * 8;
 
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    if (!context) {
-      return text.length * 8;
-    }
+    if (!context) return text.length * 8;
 
     context.font = font;
     return Math.ceil(context.measureText(text).width);
@@ -109,12 +102,16 @@ export function drawAxes(root: Selection<SVGSVGElement, unknown, null, undefined
   const { x, y } = scales;
   const { width, height } = size;
 
-  // X Axis
+  const xAxisTransform = INVERTED_Y_AXIS ? `translate(0,${margins.top})` : `translate(0,${height - margins.bottom})`;
+
+  const xAxisGenerator = INVERTED_Y_AXIS ? axisTop(x) : axisBottom(x);
+
+  // 2. Draw the X Axis
   root
     .append("g")
-    .attr("transform", `translate(0,${height - margins.bottom})`)
+    .attr("transform", xAxisTransform)
     .call(
-      axisBottom(x)
+      xAxisGenerator
         .ticks(Math.max(2, Math.floor(width / 120)), "d")
         .tickSize(0)
         .tickPadding(8),
@@ -124,14 +121,14 @@ export function drawAxes(root: Selection<SVGSVGElement, unknown, null, undefined
       g
         .append("text")
         .attr("x", width - margins.right)
-        .attr("y", -4)
+        .attr("y", INVERTED_Y_AXIS ? 16 : -4)
         .attr("fill", "currentColor")
         .attr("font-weight", "bold")
         .attr("text-anchor", "end")
         .text(xLabel),
     );
 
-  // Y Axis
+  // Y Axis (Keep this exactly the same!)
   root
     .append("g")
     .attr("transform", `translate(${margins.left},0)`)
@@ -153,22 +150,16 @@ export function createClipPath(root: Selection<SVGSVGElement, unknown, null, und
     .attr("height", dimensions.height - margins.top - margins.bottom);
 }
 
-export function createCrosshair(
-  root: Selection<SVGSVGElement, unknown, null, undefined>,
-  dimensions: { width: number; height: number }, // Pass these in once!
-  margins: { top: number; right: number; bottom: number; left: number },
-) {
+export function createCrosshair(root: Selection<SVGSVGElement, unknown, null, undefined>, dimensions: { width: number; height: number }, margins: { top: number; right: number; bottom: number; left: number }) {
   const crosshairGroup = root.append("g").attr("class", "crosshair").style("opacity", 0).style("pointer-events", "none");
 
   const vLine = crosshairGroup.append("line").attr("stroke", "#9ca3af").attr("stroke-dasharray", "3 3").attr("stroke-width", 1);
   const hLine = crosshairGroup.append("line").attr("stroke", "#9ca3af").attr("stroke-dasharray", "3 3").attr("stroke-width", 1);
 
   return {
-    // Look how clean this is now! It only needs the X and Y coordinates.
     show: (cx: number, cy: number) => {
       crosshairGroup.style("opacity", 1);
 
-      // It automatically remembers `dimensions` and `margins` from the parent function
       vLine
         .attr("x1", cx)
         .attr("x2", cx)
@@ -180,9 +171,7 @@ export function createCrosshair(
         .attr("y1", cy)
         .attr("y2", cy);
     },
-    hide: () => {
-      crosshairGroup.style("opacity", 0);
-    },
+    hide: () => crosshairGroup.style("opacity", 0),
   };
 }
 
@@ -196,9 +185,7 @@ export function initializeBasePlot(config: {
   yAxisLabel: string;
   clipId: string;
 }) {
-  if (!config.margins) {
-    config.margins = { top: GRAPH_MARGIN_TOP, bottom: GRAPH_MARGIN_BOTTOM, left: GRAPH_MARGIN_LEFT, right: GRAPH_MARGIN_RIGHT };
-  }
+  if (!config.margins) config.margins = { top: GRAPH_MARGIN_TOP, bottom: GRAPH_MARGIN_BOTTOM, left: GRAPH_MARGIN_LEFT, right: GRAPH_MARGIN_RIGHT };
 
   const { svgElement, data, width, height, margins, xAxisLabel, yAxisLabel, clipId } = config;
 
@@ -228,13 +215,6 @@ export function initializeBasePlot(config: {
   return { root, scales, crosshair };
 }
 
-interface InteractionConfig<T> {
-  getCrosshairPos: (d: T) => { x: number; y: number };
-  getTooltipData: (d: T) => TooltipData;
-  onHoverIn: (element: any, d: T) => void;
-  onHoverOut: (element: any, d: T) => void;
-}
-
 export function applyChartInteractions<T>(selection: Selection<any, T, any, any>, crosshair: { show: (x: number, y: number) => void; hide: () => void }, tooltip: TooltipRef | null, config: InteractionConfig<T>) {
   selection
     .on("mouseover", function (e, d) {
@@ -245,9 +225,7 @@ export function applyChartInteractions<T>(selection: Selection<any, T, any, any>
 
       tooltip?.show(config.getTooltipData(d), e.clientX, e.clientY);
     })
-    .on("mousemove", function (e) {
-      tooltip?.move(e.clientX, e.clientY);
-    })
+    .on("mousemove", (e) => tooltip?.move(e.clientX, e.clientY))
     .on("mouseout", function (e, d) {
       config.onHoverOut(this, d);
 

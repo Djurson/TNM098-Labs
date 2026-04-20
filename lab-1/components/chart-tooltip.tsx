@@ -1,7 +1,7 @@
 "use client";
 
 import { TooltipData } from "@/lib/types";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { Ref, useImperativeHandle, useRef, useState } from "react";
 
 export interface TooltipRef {
   show: (data: TooltipData, x: number, y: number) => void;
@@ -9,7 +9,7 @@ export interface TooltipRef {
   hide: () => void;
 }
 
-export const ChartTooltip = forwardRef<TooltipRef, {}>((_, ref) => {
+export function ChartTooltip({ ref }: { ref?: Ref<TooltipRef> }) {
   const divRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<TooltipData | null>(null);
 
@@ -21,16 +21,8 @@ export const ChartTooltip = forwardRef<TooltipRef, {}>((_, ref) => {
         divRef.current.style.transform = `translate(${x + 15}px, ${y + 15}px)`;
       }
     },
-    move: (x, y) => {
-      if (divRef.current) {
-        divRef.current.style.transform = `translate(${x + 15}px, ${y + 15}px)`;
-      }
-    },
-    hide: () => {
-      if (divRef.current) {
-        divRef.current.style.opacity = "0";
-      }
-    },
+    move: (x, y) => (divRef.current ? (divRef.current.style.transform = `translate(${x + 15}px, ${y + 15}px)`) : undefined),
+    hide: () => (divRef.current ? (divRef.current.style.opacity = "0") : undefined),
   }));
 
   return (
@@ -40,17 +32,25 @@ export const ChartTooltip = forwardRef<TooltipRef, {}>((_, ref) => {
       style={{ left: 0, top: 0, willChange: "transform" }}>
       {data && (
         <>
-          {data.title && <div className="pb-1 mb-1 text-xs font-bold border-b">{data.title}</div>}
-          {data.details.map((item, index) => (
-            <div key={index} className="flex justify-between gap-4 text-xs">
-              <span className="text-muted-foreground">{item.label}:</span>
-              <span className="font-medium">{item.value}</span>
-            </div>
-          ))}
+          {data.title && <div className="pb-1 mb-1 text-xs font-bold border-b border-slate-200">{data.title}</div>}
+          <div className="flex flex-col gap-1 mt-1">
+            {data.details.map((detail, idx) => (
+              <DataDetails key={idx} detail={detail} />
+            ))}
+          </div>
         </>
       )}
     </div>
   );
-});
+}
+
+function DataDetails({ detail }: { detail: { label: string; value: string | number } }) {
+  return (
+    <div className="flex justify-between gap-4">
+      <span className="text-slate-500">{detail.label}:</span>
+      <span className="font-medium text-slate-900">{detail.value}</span>
+    </div>
+  );
+}
 
 ChartTooltip.displayName = "ChartTooltip";

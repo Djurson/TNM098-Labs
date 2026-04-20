@@ -29,9 +29,7 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
     const graphSvg = graphSvgRef.current;
     const graphContextSvg = graphContextSvgRef.current;
 
-    if (!graphSvg || !graphContextSvg) {
-      return;
-    }
+    if (!graphSvg || !graphContextSvg) return;
 
     const graphWidth = graphSize.width;
     const graphHeight = graphSize.height;
@@ -57,20 +55,10 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
 
     const { scale: colorScale, domain: colorDomain } = createDensityColorScale(bins);
     const nextContextWidth = calculateContextSvgWidth(colorDomain, GRAPH_CONTEXT_LEGEND_TEXT);
-    if (nextContextWidth !== contextSvgWidth) {
-      setContextSvgWidth(nextContextWidth);
-    }
 
-    drawHexbinGraph({
-      svgElement: graphSvg,
-      data,
-      width: graphWidth,
-      height: graphHeight,
-      color: colorScale,
-      clipId,
-      tooltip: tooltipRef.current,
-    });
+    if (nextContextWidth !== contextSvgWidth) setContextSvgWidth(nextContextWidth);
 
+    drawHexbinGraph(graphSvg, data, graphWidth, graphHeight, colorScale, clipId, tooltipRef.current);
     drawGraphContext(graphContextSvg, graphContextWidth, graphContextHeight, colorScale, colorDomain, gradientId);
   }, [data, graphSize.width, graphSize.height, gradientId, clipId]);
 
@@ -94,32 +82,8 @@ export function HexBinPlot({ data }: { data: EyeTrackDataPoint[] }) {
   );
 }
 
-function drawHexbinGraph({
-  svgElement,
-  data,
-  width,
-  height,
-  color,
-  clipId,
-  tooltip,
-}: {
-  svgElement: SVGSVGElement;
-  data: EyeTrackDataPoint[];
-  width: number;
-  height: number;
-  color: (value: number) => string;
-  clipId: string;
-  tooltip: TooltipRef | null;
-}) {
-  const basePlot = initializeBasePlot({
-    svgElement,
-    data,
-    width,
-    height,
-    xAxisLabel: GRAPH_X_LEGEND_TEXT,
-    yAxisLabel: GRAPH_Y_LEGEND_TEXT,
-    clipId,
-  });
+function drawHexbinGraph(svgElement: SVGSVGElement, data: EyeTrackDataPoint[], width: number, height: number, color: (value: number) => string, clipId: string, tooltip: TooltipRef | null) {
+  const basePlot = initializeBasePlot({ svgElement, data, width, height, xAxisLabel: GRAPH_X_LEGEND_TEXT, yAxisLabel: GRAPH_Y_LEGEND_TEXT, clipId });
 
   if (!basePlot) return;
 
@@ -173,13 +137,10 @@ function drawGraphContext(svgElement: SVGSVGElement, width: number, height: numb
   linearGradient
     .selectAll("stop")
     .data(
-      Array.from({ length: 10 }, (_, i) => {
-        const fraction = i / 9;
-        return {
-          offset: `${fraction * 100}%`,
-          color: color(colorDomain[0] + (colorDomain[1] - colorDomain[0]) * fraction),
-        };
-      }),
+      Array.from({ length: 10 }, (_, i) => ({
+        offset: `${(i / 9) * 100}%`,
+        color: color(colorDomain[0] + (colorDomain[1] - colorDomain[0]) * (i / 9)),
+      })),
     )
     .join("stop")
     .attr("offset", (d) => d.offset)
