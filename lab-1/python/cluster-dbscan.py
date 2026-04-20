@@ -5,20 +5,17 @@ import json
 
 
 def process_and_bin_data():
-    # Load data and extract coordinates
     df = pd.read_csv('EyeTrack-raw.tsv', sep='\t')
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
     coords = df[['GazePointX(px)', 'GazePointY(px)']].fillna(0)
 
-    # 1. DBSCAN SETTINGS
     db = DBSCAN(eps=25, min_samples=4000)
     
-    # 2. FIT WITH SAMPLE WEIGHTS
     db.fit(coords, sample_weight=df['GazeEventDuration(mS)'])
     df['cluster'] = db.labels_
 
-    # 3. Calculate centers and format them into the new "clusters" structure
+    # Calculate centers and format them into the new "clusters" structure
     centers_df = df[df['cluster'] != -1].groupby('cluster')[['GazePointX(px)', 'GazePointY(px)']].mean().sort_index()
     
     clusters_info = []
@@ -34,11 +31,11 @@ def process_and_bin_data():
     bin_size = 15000 
     df['time_bin'] = (df['RecordingTimestamp'] // bin_size) * bin_size
 
-    # 5. Calculate frequency
+    # Calculate frequency
     freq = df.groupby(['time_bin', 'cluster']).size().unstack(fill_value=0).reset_index()
     freq.columns = [str(col) if col != 'time_bin' else col for col in freq.columns]
 
-    # 6. Map the points
+    # Map the points
     points = []
     for idx, row in df.iterrows():
         points.append({
@@ -53,7 +50,7 @@ def process_and_bin_data():
             }
         })
 
-    # 7. Construct the final dictionary using "clusters" instead of "centers"
+    # Construct the final dictionary using "clusters" instead of "centers"
     result = {
         "clusters": clusters_info,
         "points": points,
