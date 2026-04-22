@@ -281,7 +281,7 @@ export function ClusterPlot({ data, clusters, maxTime }: { data: EyeTrackDataPoi
 
   return (
     <div className="flex flex-col flex-1 h-full">
-      <div className="flex flex-col gap-1 px-12 py-3 mx-8 mt-6 border shadow-sm rounded-xl border-border/60 bg-muted/40 backdrop-blur-sm">
+      <div className="flex flex-col gap-1 px-12 py-3 mx-8 mt-1 mb-2 border shadow-sm rounded-xl border-border/60 bg-muted/40 backdrop-blur-sm">
         <ClusterTimeLine
           transitions={transitions}
           numberOfClusters={clusters.length}

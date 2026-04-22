@@ -94,7 +94,7 @@ function TimeLine({ onChange, value, maxTime }: { onChange: (value: [number, num
   const ticks = Array.from({ length: numTicks }, (_, i) => i * 20);
 
   return (
-    <div className="flex flex-col gap-1 px-12 py-3 mx-8 mt-6 border shadow-sm rounded-xl border-border/60 bg-muted/40 backdrop-blur-sm">
+    <div className="flex flex-col gap-1 px-12 py-3 mx-8 mt-1 mb-2  border shadow-sm rounded-xl border-border/60 bg-muted/40 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-2">
         <Label htmlFor="time-slider" className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
           Time filter

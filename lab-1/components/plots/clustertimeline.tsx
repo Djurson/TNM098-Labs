@@ -55,7 +55,7 @@ export function ClusterTimeLine({ transitions, numberOfClusters, maxTime, isPlay
   }
 
   return (
-    <div className="flex flex-col w-full gap-3 pb-2">
+    <div className="flex flex-col w-full gap-3 pb-1">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">Cluster Dominance</Label>
 

@@ -128,13 +128,23 @@ export function drawAxes(root: Selection<SVGSVGElement, unknown, null, undefined
         .text(xLabel),
     );
 
-  // Y Axis (Keep this exactly the same!)
+  // Y Axis
   root
     .append("g")
     .attr("transform", `translate(${margins.left},0)`)
     .call(axisLeft(y).ticks(6, "d").tickSize(0).tickPadding(8))
     .call((g) => g.select(".domain").attr("stroke", "#111827").attr("stroke-width", 1.2))
-    .call((g) => g.append("text").attr("x", 4).attr("y", margins.top).attr("dy", ".71em").attr("fill", "currentColor").attr("font-weight", "bold").attr("text-anchor", "start").text(yLabel));
+    .call((g) =>
+      g
+        .append("text")
+        .attr("x", 8)
+        .attr("y", INVERTED_Y_AXIS ? height - margins.bottom : margins.top)
+        .attr("dy", INVERTED_Y_AXIS ? "-0.5em" : ".71em")
+        .attr("fill", "currentColor")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "start")
+        .text(yLabel),
+    );
 }
 
 export function createClipPath(root: Selection<SVGSVGElement, unknown, null, undefined>, clipId: string, dimensions: { width: number; height: number }, margins: { top: number; right: number; bottom: number; left: number }) {
