@@ -113,12 +113,8 @@ export default function D3Timeline({ data, onDateClick }: D3TimelineProps) {
           { label: "Total Reports", value: d.Total_Reports },
         ],
       }),
-      onHoverIn: (element) => {
-        d3.select(element).attr("fill", "#b91c1c"); // Darken red on hover
-      },
-      onHoverOut: (element) => {
-        d3.select(element).attr("fill", "#ef4444"); // Restore original red
-      },
+      onHoverIn: (element) => d3.select(element).attr("fill", "#b91c1c"),
+      onHoverOut: (element) => d3.select(element).attr("fill", "#ef4444"),
     });
   }, [data, onDateClick, size]);
 
