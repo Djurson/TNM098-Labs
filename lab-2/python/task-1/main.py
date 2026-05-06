@@ -6,7 +6,7 @@ from PIL import Image
 feature_vectors = {}
 
 # Path to your folder (adjust if your script is in a different directory)
-folder_path = 'Lab2.1/*.jpg'
+folder_path = '*.jpg'
 
 # 1. Loop through all .jpg images in the directory
 for img_path in glob.glob(folder_path):
