@@ -1,0 +1,197 @@
+[
+    {
+        "topic_id": 1,
+        "top_words": [
+            {
+                "text": "airlines",
+                "value": 51.09
+            },
+            {
+                "text": "said",
+                "value": 49.66
+            },
+            {
+                "text": "antarctica",
+                "value": 45.06
+            },
+            {
+                "text": "crash",
+                "value": 40.67
+            },
+            {
+                "text": "security",
+                "value": 34.29
+            },
+            {
+                "text": "games",
+                "value": 32.33
+            },
+            {
+                "text": "mr",
+                "value": 31.25
+            },
+            {
+                "text": "officials",
+                "value": 27.6
+            },
+            {
+                "text": "flight",
+                "value": 27.42
+            },
+            {
+                "text": "terrorism",
+                "value": 24.8
+            },
+            {
+                "text": "obryan",
+                "value": 20.93
+            },
+            {
+                "text": "federal",
+                "value": 20.38
+            },
+            {
+                "text": "also",
+                "value": 19.58
+            },
+            {
+                "text": "investigation",
+                "value": 18.98
+            },
+            {
+                "text": "us",
+                "value": 18.34
+            }
+        ]
+    },
+    {
+        "topic_id": 2,
+        "top_words": [
+            {
+                "text": "said",
+                "value": 33.16
+            },
+            {
+                "text": "investigators",
+                "value": 22.12
+            },
+            {
+                "text": "explosive",
+                "value": 16.31
+            },
+            {
+                "text": "source",
+                "value": 16.02
+            },
+            {
+                "text": "could",
+                "value": 14.53
+            },
+            {
+                "text": "evidence",
+                "value": 11.63
+            },
+            {
+                "text": "flight",
+                "value": 11.24
+            },
+            {
+                "text": "explosion",
+                "value": 10.99
+            },
+            {
+                "text": "chemical",
+                "value": 10.32
+            },
+            {
+                "text": "also",
+                "value": 10.11
+            },
+            {
+                "text": "bomb",
+                "value": 9.87
+            },
+            {
+                "text": "crash",
+                "value": 8.99
+            },
+            {
+                "text": "one",
+                "value": 8.65
+            },
+            {
+                "text": "french",
+                "value": 8.33
+            },
+            {
+                "text": "petn",
+                "value": 8.33
+            }
+        ]
+    },
+    {
+        "topic_id": 3,
+        "top_words": [
+            {
+                "text": "police",
+                "value": 20.12
+            },
+            {
+                "text": "vastopolis",
+                "value": 17.3
+            },
+            {
+                "text": "city",
+                "value": 16.29
+            },
+            {
+                "text": "bomb",
+                "value": 11.7
+            },
+            {
+                "text": "would",
+                "value": 10.13
+            },
+            {
+                "text": "residents",
+                "value": 9.32
+            },
+            {
+                "text": "officials",
+                "value": 9.06
+            },
+            {
+                "text": "network",
+                "value": 8.33
+            },
+            {
+                "text": "vastpress",
+                "value": 8.32
+            },
+            {
+                "text": "well",
+                "value": 8.31
+            },
+            {
+                "text": "threat",
+                "value": 8.22
+            },
+            {
+                "text": "said",
+                "value": 8.18
+            },
+            {
+                "text": "event",
+                "value": 7.33
+            },
+            {
+                "text": "lucio",
+                "value": 7.33
+            },
+            {
+                "text": "stated",
+                "value": 6.34
+            }
+        ]
+    }
+]
