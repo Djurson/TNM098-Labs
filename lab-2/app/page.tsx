@@ -1,65 +1,173 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, Cloud, AlertTriangle, SearchX } from "lucide-react";
+
+import D3Timeline from "@/components/D3Timeline";
+import D3WordCloud from "@/components/D3WordCloud";
+
+import timelineData from "@/public/data/timeline_data.json";
+import reportsData from "@/public/data/reports_data.json";
+import topicsData from "@/public/data/topics_data.json";
+
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState<string>("timeline");
+
+  // Timeline States
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Topic States
+  const [selectedTopicId, setSelectedTopicId] = useState<number>(1);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+
+  // Derive the active topic data for the Word Cloud
+  const currentTopicData = topicsData.find((t) => t.topic_id === selectedTopicId)?.top_words || [];
+
+  // Step 9: Drill-down Filtering Logic
+  let displayedReports = reportsData;
+
+  if (activeTab === "timeline" && selectedDate) {
+    // If on timeline tab, filter by date
+    displayedReports = reportsData.filter((report) => report.Date === selectedDate);
+  } else if (activeTab === "topics") {
+    // If on topics tab, filter by the active topic
+    displayedReports = reportsData.filter((report) => report.Dominant_Topic === selectedTopicId);
+
+    // If a specific word was clicked in the cloud, filter even further
+    if (selectedWord) {
+      displayedReports = displayedReports.filter((report) => report.Content.toLowerCase().includes(selectedWord.toLowerCase()));
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-screen bg-slate-50">
+      {/* Left Column: Visualizations */}
+      <div className="lg:col-span-8 flex flex-col space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="timeline" className="flex gap-2">
+              <BarChart3 className="size-4" />
+              Temporal Distribution
+            </TabsTrigger>
+            <TabsTrigger value="topics" className="flex gap-2">
+              <Cloud className="size-4" />
+              Topic Word Cloud
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="timeline" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reporting Density Over Time</CardTitle>
+                <p className="text-sm text-muted-foreground">Compare total reports vs. filtered threat reports. Click a bar to view specific reports.</p>
+              </CardHeader>
+              <CardContent>
+                <D3Timeline data={timelineData} onDateClick={(date) => setSelectedDate(date)} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="topics" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>LDA Topic Models</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Select a topic to view its top words. Click a word to filter the reports.</p>
+                </div>
+                {/* Topic Selector Buttons */}
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((id) => (
+                    <Button
+                      key={id}
+                      variant={selectedTopicId === id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTopicId(id);
+                        setSelectedWord(null); // Clear word filter on topic change
+                      }}>
+                      Topic {id}
+                    </Button>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* D3 Word Cloud Integration */}
+                <D3WordCloud words={currentTopicData} onWordClick={(word) => setSelectedWord(word)} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Right Column: Step 9 Context Drill-down */}
+      <Card className="lg:col-span-4 flex flex-col h-150 lg:h-auto">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="size-5 text-red-500" />
+            Relevant Reports
+          </CardTitle>
+          {/* Clear Filters Button */}
+          {(selectedDate || selectedWord) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedDate(null);
+                setSelectedWord(null);
+              }}>
+              Clear Filters
+            </Button>
+          )}
+        </CardHeader>
+
+        <div className="px-6 pb-2 flex flex-wrap gap-2">
+          {activeTab === "timeline" && selectedDate && (
+            <Badge variant="destructive" className="justify-center">
+              Date: {selectedDate}
+            </Badge>
+          )}
+          {activeTab === "topics" && (
+            <Badge variant="default" className="justify-center">
+              Viewing Topic {selectedTopicId}
+            </Badge>
+          )}
+          {activeTab === "topics" && selectedWord && (
+            <Badge variant="secondary" className="justify-center border-blue-500 text-blue-700 bg-blue-50">
+              Contains: "{selectedWord}"
+            </Badge>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <ScrollArea className="h-full px-6">
+            <div className="space-y-6 pb-6 mt-4">
+              {displayedReports.map((report) => (
+                <div key={report.ID} className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-sm leading-tight text-slate-900">{report.Title}</h3>
+                    <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100">
+                      Topic {report.Dominant_Topic}
+                    </Badge>
+                  </div>
+                  <p className="text-xs font-mono text-slate-500">{report.Date}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-4 hover:line-clamp-none transition-all">{report.Content}</p>
+                </div>
+              ))}
+              {displayedReports.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                  <SearchX className="size-8 mb-2 opacity-50" />
+                  <p>No reports match your filters.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 }

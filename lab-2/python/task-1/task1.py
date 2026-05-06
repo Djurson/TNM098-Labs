@@ -4,7 +4,6 @@ import glob
 import os
 from scipy.spatial import distance
 
-# Setup and Feature Extraction Function
 def extract_features(img_path):
     img = cv2.imread(img_path)
     if img is None: return None

@@ -189,3 +189,11 @@ timeline_df.to_json(OUTPUT_FILE_PATH +'timeline_data.json', orient='records')
 
 print("Successfully merged topic distributions into 'timeline_data.json'!")
 print(timeline_df.head())
+
+# ==========================================
+# PREP FOR STEP 9: Export Raw Reports
+# ==========================================
+# Select the columns we need to display in Next.js
+reports_export = filtered_df[['ID', 'Date', 'Title', 'Content', 'Dominant_Topic']]
+reports_export.to_json(OUTPUT_FILE_PATH + 'reports_data.json', orient='records')
+print("Exported 'reports_data.json' for Next.js drill-down!")
