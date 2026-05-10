@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-// Import your provided utilities (adjust paths to match your project structure)
+// Import your provided utilities
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 import { ChartTooltip, TooltipRef } from "./chart-tooltip";
 import { TooltipData } from "@/lib/types";
@@ -18,9 +18,18 @@ interface TimelineData {
 interface D3TimelineProps {
   data: TimelineData[];
   onDateClick: (date: string) => void;
+  selectedDate: string | null;
+  selectedTopicId: number | null;
+  colors: Record<number, string>;
 }
 
-export default function D3Timeline({ data, onDateClick }: D3TimelineProps) {
+export default function D3Timeline({
+  data,
+  onDateClick,
+  selectedDate,
+  selectedTopicId,
+  colors,
+}: D3TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<TooltipRef>(null);
@@ -31,6 +40,7 @@ export default function D3Timeline({ data, onDateClick }: D3TimelineProps) {
   useEffect(() => {
     if (!data.length || !svgRef.current || size.width === 0) return;
 
+    const topicKeys = ["Topic_1", "Topic_2", "Topic_3"];
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous renders
 
@@ -53,6 +63,14 @@ export default function D3Timeline({ data, onDateClick }: D3TimelineProps) {
       .range([innerHeight, 0]);
 
     const root = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const stackGenerator = d3
+      .stack<TimelineData>()
+      .keys(topicKeys)
+      .order(d3.stackOrderNone)
+      .offset(d3.stackOffsetNone);
+
+    const layers = stackGenerator(data);
 
     // X Axis
     root
@@ -78,45 +96,82 @@ export default function D3Timeline({ data, onDateClick }: D3TimelineProps) {
       .attr("width", x.bandwidth())
       .attr("height", (d) => innerHeight - y(d.Total_Reports))
       .attr("fill", "#e2e8f0") // Light gray
-      .attr("rx", 2);
+      .attr("rx", 2)
+      .style("opacity", (d) => (selectedDate && d.Date !== selectedDate ? 0.2 : 0.5));
 
-    // Draw Foreground Bars (Threat Reports)
-    const bars = root
-      .selectAll(".bar-filtered")
-      .data(data)
+    const layerGroups = root
+      .selectAll(".layer")
+      .data(layers)
+      .enter()
+      .append("g")
+      .attr("class", "layer")
+      // Color each layer based on the topic ID (e.g., Topic_1 -> 1)
+      .attr("fill", (d) => {
+        const id = parseInt(d.key.split("_")[1]);
+        return colors[id as keyof typeof colors];
+      });
+
+    const bars = layerGroups
+      .selectAll("rect")
+      .data((d) => d) // Join the individual segments for each date
       .enter()
       .append("rect")
-      .attr("class", "bar-filtered")
-      .attr("x", (d) => x(d.Date)!)
-      .attr("y", (d) => y(d.Filtered_Reports))
+      .attr("x", (d) => x(d.data.Date)!)
+      // d[1] is the top of the segment, d[0] is the bottom
+      .attr("y", (d) => y(d[1]))
+      .attr("height", (d) => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
-      .attr("height", (d) => innerHeight - y(d.Filtered_Reports))
-      .attr("fill", "#ef4444")
-      .attr("rx", 2)
+      .attr("rx", 1)
+      // --- Highlighting & Interactivity ---
       .style("cursor", "pointer")
-      .on("click", (event, d) => onDateClick(d.Date));
+      .style("transition", "opacity 0.2s")
+      .style("opacity", (d, i, nodes) => {
+        // 1. Check if a different date is selected
+        const isOtherDate = selectedDate && d.data.Date !== selectedDate;
 
+        // 2. Cast parentNode to Element to satisfy TypeScript
+        const parentNode = nodes[i].parentNode as Element;
+        if (!parentNode) return 1;
+
+        // 3. Safely access the topic key from the parent group
+        const parentDatum = d3.select(parentNode).datum() as { key: string };
+        const topicId = parseInt(parentDatum.key.split("_")[1]);
+
+        const isOtherTopic = selectedTopicId && topicId !== selectedTopicId;
+
+        // Return dimmed opacity if either filter is active and doesn't match
+        return isOtherDate || isOtherTopic ? 0.3 : 1;
+      })
+      .on("click", (event, d) => onDateClick(d.data.Date));
     // 2. Initialize the crosshair utility[cite: 9]
     const crosshair = createCrosshair(svg, size, margin);
 
     // 3. Attach interactions, crosshairs, and tooltips automatically[cite: 9, 14]
     applyChartInteractions(bars, crosshair, tooltipRef.current, {
       getCrosshairPos: (d) => ({
-        x: x(d.Date)! + x.bandwidth() / 2 + margin.left,
-        y: y(d.Filtered_Reports) + margin.top,
+        x: x(d.data.Date)! + x.bandwidth() / 2 + margin.left,
+        y: y(d.data.Filtered_Reports) + margin.top,
       }),
       // Format the data exactly as your TooltipData type dictates[cite: 11]
       getTooltipData: (d): TooltipData => ({
-        title: `Date: ${d.Date}`,
+        title: `Date: ${d.data.Date}`,
         details: [
-          { label: "Threat Reports", value: d.Filtered_Reports },
-          { label: "Total Reports", value: d.Total_Reports },
+          { label: "Threat Reports", value: d.data.Filtered_Reports },
+          { label: "Total Reports", value: d.data.Total_Reports },
         ],
       }),
-      onHoverIn: (element) => d3.select(element).attr("fill", "#b91c1c"),
-      onHoverOut: (element) => d3.select(element).attr("fill", "#ef4444"),
+      onHoverIn: (element) => {
+        d3.select(element).style("opacity", 1).style("filter", "brightness(1.2)");
+      },
+      onHoverOut: (element, d) => {
+        // Return to dimmed state (0.3) if another date is selected, else full opacity
+        const isOtherDate = selectedDate && d.data.Date !== selectedDate;
+        d3.select(element)
+          .style("opacity", isOtherDate ? 0.3 : 1)
+          .style("filter", "none");
+      },
     });
-  }, [data, onDateClick, size]);
+  }, [data, onDateClick, size, selectedDate, selectedTopicId, colors]);
 
   return (
     <div ref={containerRef} className="w-full h-87.5 relative">

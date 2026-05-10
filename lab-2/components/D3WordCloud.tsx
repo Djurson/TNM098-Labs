@@ -9,9 +9,18 @@ import { TopicWord } from "@/lib/types";
 interface D3WordCloudProps {
   words: TopicWord[];
   onWordClick: (word: string) => void;
+  selectedWord: string | null;
+  colors: Record<number, string>;
+  selectedTopicId: number | null;
 }
 
-export default function D3WordCloud({ words, onWordClick }: D3WordCloudProps) {
+export default function D3WordCloud({
+  words,
+  onWordClick,
+  selectedWord,
+  colors,
+  selectedTopicId,
+}: D3WordCloudProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const size = useResizeObserver(containerRef);
@@ -52,24 +61,35 @@ export default function D3WordCloud({ words, onWordClick }: D3WordCloudProps) {
         .data(computedWords)
         .enter()
         .append("text")
+        .text((d) => d.text)
         .style("font-size", (d) => `${d.size}px`)
         .style("font-family", "Inter, sans-serif")
-        .style("font-weight", "bold")
-        .style("fill", (_, i) => colorScale(i.toString()))
+        .style("font-weight", (d) => (d.text === selectedWord ? "900" : "bold"))
+        .style("fill", (d) => {
+          if (d.text === selectedWord) return "#ef4444"; // Highlight red
+          // Use the specific color for this topic from the props
+          return selectedTopicId ? colors[selectedTopicId] : "#64748b";
+        })
+        .style("opacity", (d) => (selectedWord && d.text !== selectedWord ? 0.3 : 1))
         .attr("text-anchor", "middle")
         .attr("transform", (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
         .text((d) => d.text)
         .style("cursor", "pointer")
         .style("transition", "opacity 0.2s")
-        .on("mouseover", function () {
-          d3.select(this).style("opacity", 0.7);
+        .on("mouseover", function (event, d) {
+          if (selectedWord) {
+            d3.select(this).style("opacity", d.text === selectedWord ? 1 : 0.5);
+          } else {
+            d3.select(this).style("opacity", 0.7);
+          }
         })
-        .on("mouseout", function () {
-          d3.select(this).style("opacity", 1);
+        .on("mouseout", function (event, d) {
+          const resetOpacity = selectedWord && d.text !== selectedWord ? 0.3 : 1;
+          d3.select(this).style("opacity", resetOpacity);
         })
         .on("click", (event, d) => onWordClick(d.text));
     }
-  }, [words, size, onWordClick]);
+  }, [words, size, onWordClick, selectedWord, colors, selectedTopicId]);
 
   return (
     <div ref={containerRef} className="w-full h-87.5">
