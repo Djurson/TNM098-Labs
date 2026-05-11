@@ -25,9 +25,7 @@ export default function Dashboard() {
   // Expanded Reports State
   const [expandedReports, setExpandedReports] = useState<Record<string | number, boolean>>({});
 
-  const toggleReportExpansion = (id: string | number) => {
-    setExpandedReports((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const toggleReportExpansion = (id: string | number) => setExpandedReports((prev) => ({ ...prev, [id]: !prev[id] }));
 
   // Derive the active topic data for the Word Cloud
   const currentTopicData = topicsData.find((t) => t.topic_id === selectedTopicId)?.top_words || [];
