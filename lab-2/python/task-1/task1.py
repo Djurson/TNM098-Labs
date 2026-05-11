@@ -28,7 +28,6 @@ def extract_features(img_path):
     # Luminance Distribution of the 8x8 grid
     lum_dist = cv2.resize(gray, (8, 8)).flatten() / 255.0
 
-
     # Edge Detection
     # Captures "Edge positions and orientations"
     edges = cv2.Canny(gray, 100, 200)
