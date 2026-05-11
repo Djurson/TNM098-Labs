@@ -5,8 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Cloud, AlertTriangle, SearchX } from "lucide-react";
+import { AlertTriangle, SearchX, ChevronDown, ChevronUp } from "lucide-react";
 
 import D3Timeline from "@/components/D3Timeline";
 import D3WordCloud from "@/components/D3WordCloud";
@@ -16,14 +15,19 @@ import reportsData from "@/public/data/reports_data.json";
 import topicsData from "@/public/data/topics_data.json";
 
 export default function Dashboard() {
-  //const [activeTab, setActiveTab] = useState<string>("timeline");
-
   // Timeline States
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // Topic States
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+
+  // Expanded Reports State
+  const [expandedReports, setExpandedReports] = useState<Record<string | number, boolean>>({});
+
+  const toggleReportExpansion = (id: string | number) => {
+    setExpandedReports((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Derive the active topic data for the Word Cloud
   const currentTopicData = topicsData.find((t) => t.topic_id === selectedTopicId)?.top_words || [];
@@ -44,9 +48,7 @@ export default function Dashboard() {
   let displayedReports = reportsData;
 
   // 1. Filter by Date if selected
-  if (selectedDate) {
-    displayedReports = displayedReports.filter((report) => report.Date === selectedDate);
-  }
+  if (selectedDate) displayedReports = displayedReports.filter((report) => report.Date === selectedDate);
 
   // 2. Filter by Topic if selected
   if (selectedTopicId !== null) {
@@ -121,7 +123,7 @@ export default function Dashboard() {
 
       {/* Right Column: Step 9 Context Drill-down */}
       <Card className="lg:col-span-4 flex flex-col h-150 lg:h-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="size-5 text-red-500" />
             Relevant Reports
@@ -138,44 +140,57 @@ export default function Dashboard() {
           )}
         </CardHeader>
 
-        <div className="px-6 pb-2 flex flex-wrap gap-2">
-          {/* If a date is selected, show the badge */}
-          {selectedDate && (
-            <Badge variant="destructive" className="justify-center">
-              Date: {selectedDate}
-            </Badge>
-          )}
+        {(selectedDate || selectedTopicId || selectedWord) && (
+          <div className="px-6 flex flex-wrap gap-2">
+            {/* If a date is selected, show the badge */}
+            {selectedDate && (
+              <Badge variant="destructive" className="justify-center">
+                Date: {selectedDate}
+              </Badge>
+            )}
 
-          {/* If a topic is selected, show the badge */}
-          {selectedTopicId && (
-            <Badge variant="default" className="justify-center">
-              Viewing: {topicLabels[selectedTopicId as keyof typeof topicLabels]}
-            </Badge>
-          )}
+            {/* If a topic is selected, show the badge */}
+            {selectedTopicId && (
+              <Badge variant="default" className="justify-center">
+                Viewing: {topicLabels[selectedTopicId as keyof typeof topicLabels]}
+              </Badge>
+            )}
 
-          {/* If a word is selected, show the badge */}
-          {selectedWord && (
-            <Badge variant="secondary" className="justify-center border-blue-500 text-blue-700 bg-blue-50">
-              Contains: "{selectedWord}"
-            </Badge>
-          )}
-        </div>
+            {/* If a word is selected, show the badge */}
+            {selectedWord && (
+              <Badge variant="secondary" className="justify-center border-blue-500 text-blue-700 bg-blue-50">
+                Contains: "{selectedWord}"
+              </Badge>
+            )}
+          </div>
+        )}
 
         <CardContent className="flex-1 overflow-hidden p-0">
           <ScrollArea className="h-full px-6">
             <div className="space-y-6 pb-6 mt-4">
-              {displayedReports.map((report) => (
-                <div key={report.ID} className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-sm leading-tight text-slate-900">{report.Title}</h3>
-                    <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100" style={{ background: topicColors[report.Dominant_Topic] }}>
-                      Topic {topicLabels[report.Dominant_Topic]}
-                    </Badge>
+              {displayedReports.map((report) => {
+                const isExpanded = expandedReports[report.ID];
+
+                return (
+                  <div key={report.ID} className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-sm leading-tight text-slate-900">{report.Title}</h3>
+                      <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100" style={{ background: topicColors[report.Dominant_Topic] }}>
+                        Topic {topicLabels[report.Dominant_Topic]}
+                      </Badge>
+                    </div>
+                    <p className="text-xs font-mono text-slate-500">{report.Date}</p>
+
+                    {/* Replaced hover:line-clamp-none with conditional state */}
+                    <p className={`text-sm text-slate-700 leading-relaxed transition-all ${isExpanded ? "" : "line-clamp-2"}`}>{report.Content}</p>
+
+                    {/* Arrow Toggle Button */}
+                    <Button variant="ghost" size="sm" className="w-full self-start h-8 px-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100" onClick={() => toggleReportExpansion(report.ID)} title={isExpanded ? "Show less" : "Show more"}>
+                      {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                    </Button>
                   </div>
-                  <p className="text-xs font-mono text-slate-500">{report.Date}</p>
-                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-4 hover:line-clamp-none transition-all">{report.Content}</p>
-                </div>
-              ))}
+                );
+              })}
               {displayedReports.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-40 text-slate-400">
                   <SearchX className="size-8 mb-2 opacity-50" />
