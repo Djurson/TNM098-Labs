@@ -114,9 +114,9 @@ filtered_df = filtered_df.copy() # Avoid SettingWithCopyWarning
 filtered_df['Joined_Content'] = filtered_df['Cleaned_Content'].apply(lambda tokens: ' '.join(tokens))
 
 # Create the Document-Term Matrix
-# We use CountVectorizer (standard for LDA) and ignore words that appear in >90% of documents
+# We use CountVectorizer (standard for LDA) and ignore words that appear in >x% of documents
 # or in less than 2 documents.
-vectorizer = CountVectorizer(max_df=0.9, min_df=2)
+vectorizer = CountVectorizer(max_df=0.85, min_df=2)
 dtm = vectorizer.fit_transform(filtered_df['Joined_Content'])
 
 # Build the LDA Topic Model
@@ -132,7 +132,7 @@ topics_data = []
 # Loop through each topic to grab the top 15 words and their "importance" weights
 for topic_idx, topic in enumerate(lda_model.components_):
     # Top 15 words
-    top_word_indices = topic.argsort()[:-11:-1]
+    top_word_indices = topic.argsort()[:-16:-1]
     
     # Format for react: { text: "word", value: 10.5 }
     topic_words = [

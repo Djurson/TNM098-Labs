@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, SearchX, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react";
 
 import D3Timeline from "@/components/D3Timeline";
 import D3WordCloud from "@/components/D3WordCloud";
@@ -15,19 +14,13 @@ import reportsData from "@/public/data/reports_data.json";
 import topicsData from "@/public/data/topics_data.json";
 
 export default function Dashboard() {
-  // Timeline States
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  // Topic States
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-
-  // Expanded Reports State
   const [expandedReports, setExpandedReports] = useState<Record<string | number, boolean>>({});
 
   const toggleReportExpansion = (id: string | number) => setExpandedReports((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  // Derive the active topic data for the Word Cloud
   const currentTopicData = topicsData.find((t) => t.topic_id === selectedTopicId)?.top_words || [];
 
   const topicLabels: Record<number, string> = {
@@ -37,36 +30,29 @@ export default function Dashboard() {
   };
 
   const topicColors: Record<number, string> = {
-    1: "#3b82f6", // Blue (Aviation/Games)
-    2: "#10b981", // Green (Forensics)
-    3: "#f59e0b", // Amber (City Threats)
+    1: "#3b82f6", // Blue
+    2: "#10b981", // Green
+    3: "#f59e0b", // Amber
   };
 
-  // Step 9: Global Additive Filtering Logic
-  let displayedReports = reportsData;
-
-  // 1. Filter by Date if selected
-  if (selectedDate) displayedReports = displayedReports.filter((report) => report.Date === selectedDate);
-
-  // 2. Filter by Topic if selected
-  if (selectedTopicId !== null) {
-    displayedReports = displayedReports.filter((report) => report.Dominant_Topic === selectedTopicId);
-  }
-
-  // 3. Filter by Word if selected
-  if (selectedWord) {
-    displayedReports = displayedReports.filter((report) => report.Content.toLowerCase().includes(selectedWord.toLowerCase()));
-  }
+  // Step 9: Filtering Logic
+  const filteredReports = useMemo(() => {
+    return reportsData.filter((report) => {
+      const matchesTopic = selectedTopicId ? report.Dominant_Topic === selectedTopicId : true;
+      const matchesDate = selectedDate ? report.Date === selectedDate : true;
+      const matchesWord = selectedWord ? report.Content.toLowerCase().includes(selectedWord.toLowerCase()) : true;
+      return matchesTopic && matchesDate && matchesWord;
+    });
+  }, [selectedTopicId, selectedDate, selectedWord]);
 
   return (
     <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-screen bg-slate-50">
-      {/* Left Column: Visualizations Stacked Vertically */}
+      {/* LEFT COLUMN */}
       <div className="lg:col-span-8 flex flex-col space-y-6">
-        {/* 1. Temporal Distribution Card */}
         <Card>
           <CardHeader>
             <CardTitle>Reporting Density Over Time</CardTitle>
-            <p className="text-sm text-muted-foreground">Compare total reports vs. filtered threat reports. Click a bar to view specific reports.</p>
+            <p className="text-sm text-muted-foreground">Compare total reports vs. filtered threat reports.</p>
           </CardHeader>
           <CardContent>
             <D3Timeline
@@ -74,22 +60,17 @@ export default function Dashboard() {
               selectedDate={selectedDate}
               selectedTopicId={selectedTopicId}
               colors={topicColors}
-              onDateClick={(date) => {
-                // Functional update ensures we compare against the ABSOLUTE latest state
-                setSelectedDate((prevDate) => (prevDate === date ? null : date));
-              }}
+              onDateClick={(date) => setSelectedDate((prev) => (prev === date ? null : date))}
             />
           </CardContent>
         </Card>
 
-        {/* 2. Topic Word Cloud Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle>LDA Topic Models</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Select a topic to view its top words. Click a word to filter the reports.</p>
+              <p className="text-sm text-muted-foreground mt-1">Select a topic to explore keywords.</p>
             </div>
-            {/* Topic Selector Buttons */}
             <div className="flex gap-2">
               {[1, 2, 3].map((id) => (
                 <Button
@@ -97,19 +78,25 @@ export default function Dashboard() {
                   variant={selectedTopicId === id ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    const newId = selectedTopicId === id ? null : id;
-                    setSelectedTopicId(newId);
-                    setSelectedWord(null); // Clear word filter when topic changes or deselects
-                  }}>
+                    setSelectedTopicId(selectedTopicId === id ? null : id);
+                    setSelectedWord(null);
+                  }}
+                  className="gap-2">
                   {topicLabels[id]}
-                  <span className="size-2 rounded-md" style={{ background: topicColors[id] }} />
+                  <div className="size-2 rounded-full" style={{ background: topicColors[id] }} />
                 </Button>
               ))}
             </div>
           </CardHeader>
           <CardContent>
             {selectedTopicId ? (
-              <D3WordCloud words={currentTopicData} onWordClick={setSelectedWord} selectedWord={selectedWord} selectedTopicId={selectedTopicId} colors={topicColors} />
+              <D3WordCloud
+                words={currentTopicData}
+                onWordClick={setSelectedWord}
+                selectedWord={selectedWord}
+                selectedTopicId={selectedTopicId}
+                colors={topicColors}
+              />
             ) : (
               <div className="flex items-center justify-center h-75 border-2 border-dashed rounded-lg text-slate-400">
                 <p>Select a topic above to explore key terms</p>
@@ -119,84 +106,80 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Right Column: Step 9 Context Drill-down */}
-      <Card className="lg:col-span-4 flex flex-col h-150 lg:h-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-red-500" />
-            Relevant Reports
-          </CardTitle>
-          {/* Clear Filters Button */}
-          {(selectedDate || selectedWord) && (
-            <Button
-              onClick={() => {
-                setSelectedDate(null);
-                setSelectedWord(null);
-              }}>
-              Clear Filters
-            </Button>
-          )}
-        </CardHeader>
+      {/* RIGHT COLUMN: Step 9 Drill-down */}
+      <Card className="lg:col-span-4 flex flex-col h-[716px]">
+        <CardHeader className="border-b space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-red-500" />
+              Relevant Reports
+            </CardTitle>
+            <Badge variant="secondary">{filteredReports.length} total</Badge>
+          </div>
 
-        {(selectedDate || selectedTopicId || selectedWord) && (
-          <div className="px-6 flex flex-wrap gap-2">
-            {/* If a date is selected, show the badge */}
-            {selectedDate && (
-              <Badge variant="destructive" className="justify-center">
-                Date: {selectedDate}
-              </Badge>
-            )}
-
-            {/* If a topic is selected, show the badge */}
+          {/* ACTIVE FILTER CHIPS (New feature) */}
+          <div className="flex flex-wrap gap-2 min-h-6">
+            {/* Topic Filter Chip */}
             {selectedTopicId && (
-              <Badge variant="default" className="justify-center">
-                Viewing: {topicLabels[selectedTopicId as keyof typeof topicLabels]}
+              <Badge
+                variant="outline"
+                className="gap-2 bg-white rounded-full px-3 py-1 text-[11px] font-medium transition-all border-blue-500 text-blue-500"
+                style={{ borderColor: topicColors[selectedTopicId], color: topicColors[selectedTopicId] }}>
+                {topicLabels[selectedTopicId]}
+                <button onClick={() => setSelectedTopicId(null)} className="hover:bg-slate-100 rounded-full p-0.5 transition-colors">
+                  <X className="size-3" />
+                </button>
               </Badge>
             )}
 
-            {/* If a word is selected, show the badge */}
+            {/* Date Filter Chip */}
+            {selectedDate && (
+              <Badge variant="outline" className="gap-2 bg-white border-blue-500 text-blue-500 rounded-full px-3 py-1 text-[11px] font-medium">
+                {selectedDate}
+                <button onClick={() => setSelectedDate(null)} className="hover:bg-blue-50 rounded-full p-0.5 transition-colors">
+                  <X className="size-3" />
+                </button>
+              </Badge>
+            )}
+
+            {/* Word Filter Chip */}
             {selectedWord && (
-              <Badge variant="secondary" className="justify-center border-blue-500 text-blue-700 bg-blue-50">
-                Contains: "{selectedWord}"
+              <Badge variant="outline" className="gap-2 bg-white border-red-500 text-red-700 rounded-full px-3 py-1 text-[11px] font-medium">
+                "{selectedWord}"
+                <button onClick={() => setSelectedWord(null)} className="hover:bg-red-50 rounded-full p-0.5 transition-colors">
+                  <X className="size-3" />
+                </button>
               </Badge>
             )}
           </div>
-        )}
+        </CardHeader>
 
-        <CardContent className="flex-1 overflow-hidden p-0">
-          <ScrollArea className="h-full px-6">
-            <div className="space-y-6 pb-6 mt-4">
-              {displayedReports.map((report) => {
-                const isExpanded = expandedReports[report.ID];
-
-                return (
-                  <div key={report.ID} className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-semibold text-sm leading-tight text-slate-900">{report.Title}</h3>
-                      <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100" style={{ background: topicColors[report.Dominant_Topic] }}>
-                        Topic {topicLabels[report.Dominant_Topic]}
-                      </Badge>
-                    </div>
-                    <p className="text-xs font-mono text-slate-500">{report.Date}</p>
-
-                    {/* Replaced hover:line-clamp-none with conditional state */}
-                    <p className={`text-sm text-slate-700 leading-relaxed transition-all ${isExpanded ? "" : "line-clamp-2"}`}>{report.Content}</p>
-
-                    {/* Arrow Toggle Button */}
-                    <Button variant="ghost" size="sm" className="w-full self-start h-8 px-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100" onClick={() => toggleReportExpansion(report.ID)} title={isExpanded ? "Show less" : "Show more"}>
-                      {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                    </Button>
+        <CardContent className="flex-1 overflow-y-auto pt-4 custom-scrollbar">
+          <div className="space-y-4">
+            {filteredReports.map((report) => {
+              const isExpanded = expandedReports[report.ID];
+              return (
+                <div
+                  key={report.ID}
+                  className={`p-3 border-l-4 rounded-r-md transition-all cursor-pointer ${isExpanded ? "bg-white shadow-md border-slate-400" : "bg-slate-50 hover:bg-slate-100 border-transparent"}`}
+                  style={{ borderLeftColor: topicColors[report.Dominant_Topic] }}
+                  onClick={() => toggleReportExpansion(report.ID)}>
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-bold text-sm leading-tight pr-4">{report.Title}</h4>
+                    {isExpanded ? (
+                      <ChevronUp className="size-4 shrink-0 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="size-4 shrink-0 text-slate-400" />
+                    )}
                   </div>
-                );
-              })}
-              {displayedReports.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-40 text-slate-400">
-                  <SearchX className="size-8 mb-2 opacity-50" />
-                  <p>No reports match your filters.</p>
+                  <p className="text-[10px] text-slate-500 mb-2 uppercase font-medium">
+                    {report.Date} • Topic {report.Dominant_Topic}
+                  </p>
+                  <p className={`text-xs text-slate-600 leading-relaxed ${!isExpanded && "line-clamp-3"}`}>{report.Content}</p>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -69,7 +69,7 @@ distances_to_target = dist_matrix[target_idx]
 ranked_indices = np.argsort(distances_to_target)
 
 def visualize_results(dist_matrix, filenames, target_idx, ranked_indices):
-    # 1. Create the Heatmap
+    # Create Heatmap
     fig, ax = plt.subplots(figsize=(12, 10))
     im = ax.imshow(dist_matrix, cmap='viridis', interpolation='nearest')
     
@@ -99,5 +99,5 @@ print(f"\n--- Ranking for target image: {filenames[target_idx]} ---")
 for rank, idx in enumerate(ranked_indices[1:], 1):
     print(f"{rank}. {filenames[idx]} (Distance: {distances_to_target[idx]:.4f})")
 
-# 2. CALL THE VISUALIZATION FUNCTION
+# CALL VISUALIZATION FUNCTION
 visualize_results(dist_matrix, filenames, target_idx, ranked_indices)
