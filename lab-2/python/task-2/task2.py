@@ -10,8 +10,6 @@ import json
 OUTPUT_FILE_PATH = "../../public/data/"
 
 nltk.download('punkt_tab')
-
-# Download required NLTK data files (you only need to run these once)
 nltk.download('punkt')
 nltk.download('stopwords')
 
