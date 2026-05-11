@@ -24,7 +24,7 @@ export default function Dashboard() {
   const currentTopicData = topicsData.find((t) => t.topic_id === selectedTopicId)?.top_words || [];
 
   const topicLabels: Record<number, string> = {
-    1: "Aviation & Games",
+    1: "Airlines",
     2: "Forensics/Explosives",
     3: "City Threats (Network of Dread)",
   };
@@ -55,13 +55,7 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground">Compare total reports vs. filtered threat reports.</p>
           </CardHeader>
           <CardContent>
-            <D3Timeline
-              data={timelineData}
-              selectedDate={selectedDate}
-              selectedTopicId={selectedTopicId}
-              colors={topicColors}
-              onDateClick={(date) => setSelectedDate((prev) => (prev === date ? null : date))}
-            />
+            <D3Timeline data={timelineData} selectedDate={selectedDate} selectedTopicId={selectedTopicId} colors={topicColors} onDateClick={(date) => setSelectedDate((prev) => (prev === date ? null : date))} />
           </CardContent>
         </Card>
 
@@ -90,13 +84,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {selectedTopicId ? (
-              <D3WordCloud
-                words={currentTopicData}
-                onWordClick={setSelectedWord}
-                selectedWord={selectedWord}
-                selectedTopicId={selectedTopicId}
-                colors={topicColors}
-              />
+              <D3WordCloud words={currentTopicData} onWordClick={setSelectedWord} selectedWord={selectedWord} selectedTopicId={selectedTopicId} colors={topicColors} />
             ) : (
               <div className="flex items-center justify-center h-75 border-2 border-dashed rounded-lg text-slate-400">
                 <p>Select a topic above to explore key terms</p>
@@ -107,7 +95,7 @@ export default function Dashboard() {
       </div>
 
       {/* RIGHT COLUMN: Step 9 Drill-down */}
-      <Card className="lg:col-span-4 flex flex-col h-[716px]">
+      <Card className="lg:col-span-4 flex flex-col h-179">
         <CardHeader className="border-b space-y-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -121,10 +109,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2 min-h-6">
             {/* Topic Filter Chip */}
             {selectedTopicId && (
-              <Badge
-                variant="outline"
-                className="gap-2 bg-white rounded-full px-3 py-1 text-[11px] font-medium transition-all border-blue-500 text-blue-500"
-                style={{ borderColor: topicColors[selectedTopicId], color: topicColors[selectedTopicId] }}>
+              <Badge variant="outline" className="gap-2 bg-white rounded-full px-3 py-1 text-[11px] font-medium transition-all border-blue-500 text-blue-500" style={{ borderColor: topicColors[selectedTopicId], color: topicColors[selectedTopicId] }}>
                 {topicLabels[selectedTopicId]}
                 <button onClick={() => setSelectedTopicId(null)} className="hover:bg-slate-100 rounded-full p-0.5 transition-colors">
                   <X className="size-3" />
@@ -166,11 +151,7 @@ export default function Dashboard() {
                   onClick={() => toggleReportExpansion(report.ID)}>
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-bold text-sm leading-tight pr-4">{report.Title}</h4>
-                    {isExpanded ? (
-                      <ChevronUp className="size-4 shrink-0 text-slate-400" />
-                    ) : (
-                      <ChevronDown className="size-4 shrink-0 text-slate-400" />
-                    )}
+                    {isExpanded ? <ChevronUp className="size-4 shrink-0 text-slate-400" /> : <ChevronDown className="size-4 shrink-0 text-slate-400" />}
                   </div>
                   <p className="text-[10px] text-slate-500 mb-2 uppercase font-medium">
                     {report.Date} • Topic {report.Dominant_Topic}
