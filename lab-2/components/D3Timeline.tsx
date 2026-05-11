@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-// Import your provided utilities
 import { useResizeObserver } from "@/hooks/use-resize-observer";
 import { ChartTooltip, TooltipRef } from "./chart-tooltip";
 import { TooltipData } from "@/lib/types";
@@ -23,18 +22,10 @@ interface D3TimelineProps {
   colors: Record<number, string>;
 }
 
-export default function D3Timeline({
-  data,
-  onDateClick,
-  selectedDate,
-  selectedTopicId,
-  colors,
-}: D3TimelineProps) {
+export default function D3Timeline({ data, onDateClick, selectedDate, selectedTopicId, colors }: D3TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<TooltipRef>(null);
-
-  // 1. Use your custom resize observer to make the chart perfectly responsive[cite: 13]
   const size = useResizeObserver(containerRef);
 
   useEffect(() => {
@@ -64,11 +55,7 @@ export default function D3Timeline({
 
     const root = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const stackGenerator = d3
-      .stack<TimelineData>()
-      .keys(topicKeys)
-      .order(d3.stackOrderNone)
-      .offset(d3.stackOffsetNone);
+    const stackGenerator = d3.stack<TimelineData>().keys(topicKeys).order(d3.stackOrderNone).offset(d3.stackOffsetNone);
 
     const layers = stackGenerator(data);
 
@@ -117,12 +104,10 @@ export default function D3Timeline({
       .enter()
       .append("rect")
       .attr("x", (d) => x(d.data.Date)!)
-      // d[1] is the top of the segment, d[0] is the bottom
       .attr("y", (d) => y(d[1]))
       .attr("height", (d) => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .attr("rx", 1)
-      // --- Highlighting & Interactivity ---
       .style("cursor", "pointer")
       .style("transition", "opacity 0.2s")
       .style("opacity", (d, i, nodes) => {
@@ -143,16 +128,16 @@ export default function D3Timeline({
         return isOtherDate || isOtherTopic ? 0.3 : 1;
       })
       .on("click", (event, d) => onDateClick(d.data.Date));
-    // 2. Initialize the crosshair utility[cite: 9]
+    // 2. Initialize the crosshair utility
     const crosshair = createCrosshair(svg, size, margin);
 
-    // 3. Attach interactions, crosshairs, and tooltips automatically[cite: 9, 14]
+    // 3. Attach interactions, crosshairs, and tooltips automatically
     applyChartInteractions(bars, crosshair, tooltipRef.current, {
       getCrosshairPos: (d) => ({
         x: x(d.data.Date)! + x.bandwidth() / 2 + margin.left,
         y: y(d.data.Filtered_Reports) + margin.top,
       }),
-      // Format the data exactly as your TooltipData type dictates[cite: 11]
+      // Format the data exactly as your TooltipData type dictates
       getTooltipData: (d): TooltipData => ({
         title: `Date: ${d.data.Date}`,
         details: [
@@ -176,7 +161,6 @@ export default function D3Timeline({
   return (
     <div ref={containerRef} className="w-full h-87.5 relative">
       <svg ref={svgRef} width="100%" height="100%" />
-      {/* Attach the tooltip component[cite: 14] */}
       <ChartTooltip ref={tooltipRef} />
     </div>
   );

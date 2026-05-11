@@ -50,16 +50,12 @@ export default function Dashboard() {
 
   // 2. Filter by Topic if selected
   if (selectedTopicId !== null) {
-    displayedReports = displayedReports.filter(
-      (report) => report.Dominant_Topic === selectedTopicId,
-    );
+    displayedReports = displayedReports.filter((report) => report.Dominant_Topic === selectedTopicId);
   }
 
   // 3. Filter by Word if selected
   if (selectedWord) {
-    displayedReports = displayedReports.filter((report) =>
-      report.Content.toLowerCase().includes(selectedWord.toLowerCase()),
-    );
+    displayedReports = displayedReports.filter((report) => report.Content.toLowerCase().includes(selectedWord.toLowerCase()));
   }
 
   return (
@@ -70,10 +66,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Reporting Density Over Time</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Compare total reports vs. filtered threat reports. Click a bar to view specific
-              reports.
-            </p>
+            <p className="text-sm text-muted-foreground">Compare total reports vs. filtered threat reports. Click a bar to view specific reports.</p>
           </CardHeader>
           <CardContent>
             <D3Timeline
@@ -94,9 +87,7 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle>LDA Topic Models</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Select a topic to view its top words. Click a word to filter the reports.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">Select a topic to view its top words. Click a word to filter the reports.</p>
             </div>
             {/* Topic Selector Buttons */}
             <div className="flex gap-2">
@@ -106,27 +97,21 @@ export default function Dashboard() {
                   variant={selectedTopicId === id ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    // 2. Toggle logic: if clicking the same ID, set to null
                     const newId = selectedTopicId === id ? null : id;
                     setSelectedTopicId(newId);
                     setSelectedWord(null); // Clear word filter when topic changes or deselects
                   }}>
                   {topicLabels[id]}
+                  <span className="size-2 rounded-md" style={{ background: topicColors[id] }} />
                 </Button>
               ))}
             </div>
           </CardHeader>
           <CardContent>
             {selectedTopicId ? (
-              <D3WordCloud
-                words={currentTopicData}
-                onWordClick={setSelectedWord}
-                selectedWord={selectedWord}
-                selectedTopicId={selectedTopicId}
-                colors={topicColors}
-              />
+              <D3WordCloud words={currentTopicData} onWordClick={setSelectedWord} selectedWord={selectedWord} selectedTopicId={selectedTopicId} colors={topicColors} />
             ) : (
-              <div className="flex items-center justify-center h-[300px] border-2 border-dashed rounded-lg text-slate-400">
+              <div className="flex items-center justify-center h-75 border-2 border-dashed rounded-lg text-slate-400">
                 <p>Select a topic above to explore key terms</p>
               </div>
             )}
@@ -144,8 +129,6 @@ export default function Dashboard() {
           {/* Clear Filters Button */}
           {(selectedDate || selectedWord) && (
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => {
                 setSelectedDate(null);
                 setSelectedWord(null);
@@ -172,9 +155,7 @@ export default function Dashboard() {
 
           {/* If a word is selected, show the badge */}
           {selectedWord && (
-            <Badge
-              variant="secondary"
-              className="justify-center border-blue-500 text-blue-700 bg-blue-50">
+            <Badge variant="secondary" className="justify-center border-blue-500 text-blue-700 bg-blue-50">
               Contains: "{selectedWord}"
             </Badge>
           )}
@@ -184,21 +165,15 @@ export default function Dashboard() {
           <ScrollArea className="h-full px-6">
             <div className="space-y-6 pb-6 mt-4">
               {displayedReports.map((report) => (
-                <div
-                  key={report.ID}
-                  className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
+                <div key={report.ID} className="flex flex-col gap-2 pb-4 border-b border-slate-100 last:border-0">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-sm leading-tight text-slate-900">
-                      {report.Title}
-                    </h3>
-                    <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100">
-                      Topic {report.Dominant_Topic}
+                    <h3 className="font-semibold text-sm leading-tight text-slate-900">{report.Title}</h3>
+                    <Badge variant="outline" className="ml-2 whitespace-nowrap bg-slate-100" style={{ background: topicColors[report.Dominant_Topic] }}>
+                      Topic {topicLabels[report.Dominant_Topic]}
                     </Badge>
                   </div>
                   <p className="text-xs font-mono text-slate-500">{report.Date}</p>
-                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-4 hover:line-clamp-none transition-all">
-                    {report.Content}
-                  </p>
+                  <p className="text-sm text-slate-700 leading-relaxed line-clamp-4 hover:line-clamp-none transition-all">{report.Content}</p>
                 </div>
               ))}
               {displayedReports.length === 0 && (
