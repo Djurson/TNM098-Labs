@@ -61,7 +61,7 @@ features_matrix = np.array(features_list)
 dist_matrix = distance.cdist(features_matrix, features_matrix, 'euclidean')
 
 # Rank images
-target_idx = 0
+target_idx = 1
 distances_to_target = dist_matrix[target_idx]
 
 # Sort by distance (index 0 is the image itself, we skip it)

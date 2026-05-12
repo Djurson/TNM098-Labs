@@ -31,7 +31,7 @@ export default function D3Timeline({ data, onDateClick, selectedDate, selectedTo
   useEffect(() => {
     if (!data.length || !svgRef.current || size.width === 0) return;
 
-    const topicKeys = ["Topic_1", "Topic_2", "Topic_3"];
+    const topicKeys = ["Topic_1", "Topic_2", "Topic_3", "Topic_4", "Topic_5"];
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // Clear previous renders
 

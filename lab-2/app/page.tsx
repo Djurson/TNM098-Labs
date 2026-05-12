@@ -27,12 +27,16 @@ export default function Dashboard() {
     1: "Airlines",
     2: "Forensics/Explosives",
     3: "City Threats (Network of Dread)",
+    4: "Topic 4",
+    5: "Topic 5",
   };
 
   const topicColors: Record<number, string> = {
     1: "#3b82f6", // Blue
     2: "#10b981", // Green
     3: "#f59e0b", // Amber
+    4: "#4f46e5",
+    5: "#facc15",
   };
 
   // Step 9: Filtering Logic

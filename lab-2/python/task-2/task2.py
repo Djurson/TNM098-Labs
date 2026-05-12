@@ -57,10 +57,10 @@ def merge_into_timeline(timeline_df, new_df, on='Date', fill=0):
 # Apply preprocessing to the 'Content' column and store results in 'Cleaned_Content'
 df['Cleaned_Content'] = df['Content'].apply(preprocess_text)
 
-print("--- ORIGINAL CONTENT (Snippet) ---")
-print(df['Content'].iloc[0][:150], "...\n")
+# print("--- ORIGINAL CONTENT (Snippet) ---")
+# print(df['Content'].iloc[0][:150], "...\n")
 print("--- CLEANED & TOKENIZED ---")
-print(df['Cleaned_Content'].iloc[0][:15])
+# print(df['Cleaned_Content'].iloc[0][:15])
 
 
 # ==========================================
@@ -75,10 +75,10 @@ timeline_df = (
     .sort_values(by='Date')
 )
 
-export_timeline(timeline_df)
-print("\n--- STEP 2: TEMPORAL DISTRIBUTION ---")
-print("Successfully exported 'timeline_data.json'!")
-print(timeline_df.head())
+# export_timeline(timeline_df)
+# print("\n--- STEP 2: TEMPORAL DISTRIBUTION ---")
+# print("Successfully exported 'timeline_data.json'!")
+# print(timeline_df.head())
 
 
 # ==========================================
